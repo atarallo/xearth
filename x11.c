@@ -1654,9 +1654,9 @@ draw_earthquake_location (Display *dpy, earthquake_list_t *list)
     int		i;
     int		radius;
     Pixel	fill_color;
-    int		count = list->count;
+    int		count = list->count - 1;
 
-    for (i = count; i > 0; --i) {
+    for (i = count; i >= 0; --i) {
 
 	memcpy (pos, list->item[i].pos, sizeof (pos));
 
