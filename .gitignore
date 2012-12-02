@@ -2,3 +2,6 @@
 fon2inc
 xearth
 *.core
+*.d
+*.swp
+cscope.*

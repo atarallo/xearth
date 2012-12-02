@@ -122,6 +122,7 @@ int      use_two_pixmaps;       /* use two pixmaps? (X only)   */
 int      num_colors;            /* number of colors to use     */
 int      do_fork;               /* fork child process?         */
 int      priority;              /* desired process priority    */
+int	 earthquake_info;		/* earthquake information      */
 
 time_t start_time = 0;
 time_t current_time;
@@ -151,6 +152,10 @@ int main(argc, argv)
     }
   }
 
+  if (fixed_time && earthquake_info) {
+      usage ("fixed time and earthquake information could not be "
+	     "used togetehr");
+  } // end if
   if (overlayfile != NULL || cloudfile != NULL)
     num_colors = TRUE_COLOR;
 
@@ -835,6 +840,10 @@ void command_line(argc, argv)
     {
       warning("-display not relevant for GIF or PPM output");
     }
+    else if (strcmp (argv[i], "-quake-info") == 0)
+    {
+	earthquake_info = 1;
+    }
     else
     {
       usage(NULL);
@@ -1351,7 +1360,9 @@ void usage(msg)
   fprintf(stderr, " [-onepix|-twopix] [-mono|-nomono] [-ncolors num_colors]\n");
   fprintf(stderr, " [-font font_name] [-root|-noroot] [-geometry geom] [-title title]\n");
   fprintf(stderr, " [-iconname iconname] [-name name] [-fork|-nofork] [-once|-noonce]\n");
-  fprintf(stderr, " [-nice priority] [-gif] [-png] [-jpeg] [-bmp] [-ppm] [-display dpyname] [-version]\n");
+  fprintf(stderr, " [-nice priority] [-gif] [-png] [-jpeg] [-bmp] [-ppm]\n");
+  fprintf(stderr, " [-earthquake_info|-noearthquake_info] [-display dpyname] "
+		  "[-version]\n");
   fprintf(stderr, "\n");
   exit(1);
 }

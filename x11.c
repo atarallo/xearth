@@ -50,6 +50,7 @@
 #include <X11/Xproto.h>
 #include <signal.h>
 #include "kljcpyrt.h"
+#include "earthquake.h"
 
 #define RETAIN_PROP_NAME "_XSETROOT_ID"
 
@@ -100,7 +101,7 @@ static void         updateProperty _P((Display *, Window, const char *, Atom,
 static void         preserveResource _P((Display *, Window));
 static void         freePrevious _P((Display *, Window));
 static int          xkill_handler _P((Display *, XErrorEvent *));
-
+static void draw_earthquake_location (Display *dpy, earthquake_list_t *list);
 static int      bpp;
 static u16or32 *dith;
 static u_char  *xbuf;
@@ -147,6 +148,22 @@ static int   label_yvalue;      /* label y position    */
 static int   label_orient;      /* label orientation   */
 
 
+static Pixel get_color (Display *dpy, char *color_name);
+/* earthquake color */
+static char *past_time_class1_cl_name;
+static char *past_time_class2_cl_name;
+static char *past_time_class3_cl_name;
+static char *past_time_class4_cl_name;
+static char *past_time_class5_cl_name;
+
+static Pixel past_time_class1_cl;
+static Pixel past_time_class2_cl;
+static Pixel past_time_class3_cl;
+static Pixel past_time_class4_cl;
+static Pixel past_time_class5_cl;
+
+static int radius_unit;
+
 static char *defaults[] =
 {
   "*proj:       orthographic",
@@ -176,6 +193,12 @@ static char *defaults[] =
   "*grid1:      6",
   "*grid2:      15",
   "*overlayfile: none",
+  "*earthquake_info: off",
+  "*eq_past_time_class1_color: red",
+  "*eq_past_time_class2_color: gold",
+  "*eq_past_time_class3_color: darkgoldenrod",
+  "*eq_past_time_class4_color: darkslategray",
+  "*eq_past_time_class5_color: dimgrey",
   "*gamma:      1.0",
   "*font:       variable",
   "*title:      xearth",
@@ -202,6 +225,8 @@ static XrmOptionDescRec options[] =
 { "-markerfile",  ".markerfile",  XrmoptionSepArg, 0     },
 { "-showmarkers", ".showmarkers", XrmoptionNoArg,  "on"  },
 { "-overlayfile", ".overlayfile", XrmoptionSepArg, 0     },
+{ "-earthquake_info",  ".earthquake_info",  XrmoptionNoArg,  "on"  },
+{ "-noearthquake_info",".earthquake_info",  XrmoptionNoArg,  "off" },
 { "-wait",        ".wait",        XrmoptionSepArg, 0     },
 { "-timewarp",    ".timewarp",    XrmoptionSepArg, 0     },
 { "-day",         ".day",         XrmoptionSepArg, 0     },
@@ -338,6 +363,17 @@ static void process_opts()
   font_name       = get_string_resource("font", "Font");
   mono            = get_boolean_resource("mono", "Mono");
   overlayfile     = get_string_resource("overlayfile", "Overlayfile");
+  earthquake_info = get_boolean_resource("earthquake_info", "Quake_info");
+  past_time_class1_cl_name = get_string_resource("eq_past_time_class1_color",
+						 "EQ_past_time_class1_color");
+  past_time_class2_cl_name = get_string_resource("eq_past_time_class2_color",
+						 "EQ_past_time_class2_color");
+  past_time_class3_cl_name = get_string_resource("eq_past_time_class3_color",
+						 "EQ_past_time_class3_color");
+  past_time_class4_cl_name = get_string_resource("eq_past_time_class4_color",
+						 "EQ_past_time_class4_color");
+  past_time_class5_cl_name = get_string_resource("eq_past_time_class5_color",
+						 "EQ_past_time_class5_color");
 
   /* various sanity checks on simple resources
    */
@@ -419,6 +455,16 @@ static void init_x_colors()
 
       tmp += 3;
     }
+
+      past_time_class1_cl = get_color (dsply, past_time_class1_cl_name);
+      past_time_class2_cl = get_color (dsply, past_time_class2_cl_name);
+      past_time_class3_cl = get_color (dsply, past_time_class3_cl_name);
+      past_time_class4_cl = get_color (dsply, past_time_class4_cl_name);
+      past_time_class5_cl = get_color (dsply, past_time_class5_cl_name);
+
+      radius_unit = hght/500;
+      if (radius_unit == 0)
+	  radius_unit = 1; // minmum 1 pixel unit
   }
 }
 
@@ -545,6 +591,10 @@ void x11_output()
   {
     compute_positions();
 
+    /* load earthquake data */
+    if (earthquake_info) {
+	get_earthquake_data ();
+    } // end if
     /* if we were really clever, we'd only
      * do this if the position has changed
      */
@@ -1200,6 +1250,8 @@ static void x11_cleanup()
 
   dpy = dsply;
 
+  if (earthquake_info)
+      draw_earthquake_location (dpy, get_earthquake_list ());
   if (do_markers)
   {
     minfo = marker_info;
@@ -1584,3 +1636,90 @@ static int xkill_handler(dpy, xev)
    */
   return orig_error_handler(dpy, xev);
 }
+
+static Pixel
+get_color (Display *dpy, char *color_name)
+{
+    XColor near_color, true_color;
+
+    XAllocNamedColor (dpy, cmap, color_name, &near_color, &true_color);
+    return near_color.pixel;
+} // end get_color;
+
+static void
+draw_earthquake_location (Display *dpy, earthquake_list_t *list)
+{
+    int		x, y;
+    double      pos[3];
+    int		i;
+    int		radius;
+    Pixel	fill_color;
+    int		count = list->count;
+
+    for (i = count; i > 0; --i) {
+
+	memcpy (pos, list->item[i].pos, sizeof (pos));
+
+	XFORM_ROTATE(pos, view_pos_info);
+
+	if (proj_type == ProjTypeOrthographic) {
+	    // if location isn't visible, check next one
+	    if (pos[2] <= 0)
+		continue;
+	} else if (proj_type == ProjTypeMercator) {
+	    // apply mercator projection
+	    pos[0] = MERCATOR_X(pos[0], pos[2]);
+	    pos[1] = MERCATOR_Y(pos[1]);
+	} else { // proj_type == ProjTypeCylindrical
+	    // apply cylindrical projection
+	    pos[0] = CYLINDRICAL_X(pos[0], pos[2]);
+	    pos[1] = CYLINDRICAL_Y(pos[1]);
+	} // end if
+
+	x = XPROJECT(pos[0]);
+	y = YPROJECT(pos[1]);
+
+	switch (list->item[i].past_time_class) {
+	case past_time_class1:
+	    fill_color = past_time_class1_cl;
+	    break;
+	case past_time_class2:
+	    fill_color = past_time_class2_cl;
+	    break;
+	case past_time_class3:
+	    fill_color = past_time_class3_cl;
+	    break;
+	case past_time_class4:
+	    fill_color = past_time_class4_cl;
+	    break;
+	default:
+	    fill_color = past_time_class5_cl;
+	    break;
+	} // end switch
+	// find the radius to draw
+	if (list->item[i].magnitude >= 8.0) {
+	    radius = radius_unit * 18;
+	} else if (list->item[i].magnitude >= 7.0) {
+	    radius = radius_unit * 12;
+	} else if (list->item[i].magnitude >= 6.0) {
+	    radius = radius_unit * 8;
+	} else if (list->item[i].magnitude >= 5.0) {
+	    radius = radius_unit * 5;
+	} else if (list->item[i].magnitude >= 3.0) {
+	    radius = radius_unit * 3;
+	} else if (list->item[i].magnitude >= 2.0) {
+	    radius = radius_unit * 2;
+	} else
+	    radius = radius_unit;
+
+	// fill a circle
+	XSetForeground (dpy, gc, fill_color);
+	XFillArc(dpy, work_pix, gc, x - radius, y - radius,
+	         radius * 2, radius * 2, 0, 360 * 64);
+	// then draw a border
+	XSetForeground (dpy, gc, black);
+	XDrawArc(dpy, work_pix, gc, x - radius, y - radius,
+	         radius * 2, radius * 2, 0, 360 * 64);
+	XSetForeground(dpy, gc, white);
+    } // end for
+} // end draw_earthquake_location

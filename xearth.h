@@ -63,8 +63,8 @@ typedef unsigned short u_short;
 #include "extarr.h"
 #include "kljcpyrt.h"
 
-#define VersionString "1.1"
-#define HomePageURL   "http://www.cs.colorado.edu/~tuna/xearth/index.html"
+#define VersionString "1.1p1"
+#define HomePageURL   "https://github.com/qunying/xearth.git"
 
 /* if NO_RANDOM is defined, use lrand48() and srand48() 
  * instead of random() and srandom()
@@ -349,6 +349,7 @@ extern int    num_colors;
 extern int    do_fork;
 extern int    priority;
 extern time_t current_time;
+extern int    earthquake_info;
 
 extern void   compute_positions _P((void));
 extern char **tokenize _P((char *, int *, const char **));
