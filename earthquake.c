@@ -39,8 +39,9 @@ static time_t pre_dat_file_mtime = 0;
 static time_t cur_dat_file_mtime = 0;
 static time_t last_check_time = 0;
 
-// the week's data update got updated every minute at earthquake.usgs.gov
-static time_t earthquake_min_update_intrval = 60;
+// the week's data are updated every minute at earthquake.usgs.gov
+// but we only query at most once per 15 minutes
+static time_t earthquake_min_update_intrval = 15 *60;
 /* use wget to retrieve the earthquake information */
 static earthquake_info_t earthquake_items[MAX_EARTHQUAKE_ENTRY];
 

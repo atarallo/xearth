@@ -462,7 +462,7 @@ static void init_x_colors()
       past_time_class4_cl = get_color (dsply, past_time_class4_cl_name);
       past_time_class5_cl = get_color (dsply, past_time_class5_cl_name);
 
-      radius_unit = hght/500;
+      radius_unit = wdth > hght ? hght/500 : wdth/500;
       if (radius_unit == 0)
 	  radius_unit = 1; // minmum 1 pixel unit
   }

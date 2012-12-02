@@ -1,4 +1,4 @@
-.TH xearth 1 "November 1999" "KLJ"
+.TH xearth 1 "November 2012" "KLJ, patched by QY"
 
 .SH NAME
 xearth - displays a shaded image of the Earth in an X window
@@ -102,6 +102,7 @@ xearth - displays a shaded image of the Earth in an X window
 .RB [ \-display 
 .I dpyname
 ]
+.RB [ \-earthquake_info \fP|\fB \-noearthquake_info ]
 .RB [ \-version ]
 
 .SH DESCRIPTION
@@ -125,7 +126,7 @@ can also render directly into PPM and GIF files instead of drawing
 into an X window; see the \fB\-ppm\fP and \fB\-gif\fP options
 (below).
 
-This man page documents version 1.1 of
+This man page documents version 1.1p1 of
 .I xearth.
 
 .SH OPTIONS
@@ -603,6 +604,13 @@ standard out.
 .TP
 .B \-display \fIdpyname\fP
 Attempt to connect to the X display named \fIdpyname\fP.
+
+.TP
+.B \-earthquake_info \fP|\fB \-noearthquake_info
+Enable/disable displaying of earthquake informtion for the past 7 days.
+Earthquake information is reading from
+http://earthquake.usgs.gov/earthquakes/feed/csv/2.5/week. It is disable by
+default.
 
 .TP
 .B \-version
