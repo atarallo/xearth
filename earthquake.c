@@ -191,7 +191,7 @@ load_earthquake_marker (void)
     char      *save_ptr;
     char      *token;
     struct tm tm;
-    time_t    tm_diff;
+    double    tm_diff;
     double    lat;
     double    lon;
     float     mag;
@@ -243,7 +243,8 @@ load_earthquake_marker (void)
         tm.tm_sec = strtol (token, NULL, 10);
 
         earthquake_lst.item[earthquake_lst.count].time = timegm (&tm);
-        tm_diff = current_time - earthquake_lst.item[earthquake_lst.count].time;
+        tm_diff = difftime(current_time,
+                           earthquake_lst.item[earthquake_lst.count].time);
         if (tm_diff <= PAST_2HRS) {
             earthquake_lst.item[earthquake_lst.count].past_time_class
                 = past_time_class1;
