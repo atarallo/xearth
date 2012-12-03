@@ -150,17 +150,9 @@ static int   label_orient;      /* label orientation   */
 
 static Pixel get_color (Display *dpy, char *color_name);
 /* earthquake color */
-static char *past_time_class1_cl_name;
-static char *past_time_class2_cl_name;
-static char *past_time_class3_cl_name;
-static char *past_time_class4_cl_name;
-static char *past_time_class5_cl_name;
+static char *past_time_color_name[NUM_PAST_TIME_CLASS];
 
-static Pixel past_time_class1_cl;
-static Pixel past_time_class2_cl;
-static Pixel past_time_class3_cl;
-static Pixel past_time_class4_cl;
-static Pixel past_time_class5_cl;
+static Pixel past_time_color[NUM_PAST_TIME_CLASS];
 
 static int radius_unit;
 
@@ -194,11 +186,11 @@ static char *defaults[] =
   "*grid2:      15",
   "*overlayfile: none",
   "*earthquake_info: off",
-  "*eq_past_time_class1_color: red",
-  "*eq_past_time_class2_color: gold",
-  "*eq_past_time_class3_color: darkgoldenrod",
-  "*eq_past_time_class4_color: darkslategray",
-  "*eq_past_time_class5_color: dimgrey",
+  "*past_time_class1_color: red",
+  "*past_time_class2_color: gold",
+  "*past_time_class3_color: darkgoldenrod",
+  "*past_time_class4_color: darkslategray",
+  "*past_time_class5_color: dimgrey",
   "*gamma:      1.0",
   "*font:       variable",
   "*title:      xearth",
@@ -364,16 +356,16 @@ static void process_opts()
   mono            = get_boolean_resource("mono", "Mono");
   overlayfile     = get_string_resource("overlayfile", "Overlayfile");
   earthquake_info = get_boolean_resource("earthquake_info", "Quake_info");
-  past_time_class1_cl_name = get_string_resource("eq_past_time_class1_color",
-						 "EQ_past_time_class1_color");
-  past_time_class2_cl_name = get_string_resource("eq_past_time_class2_color",
-						 "EQ_past_time_class2_color");
-  past_time_class3_cl_name = get_string_resource("eq_past_time_class3_color",
-						 "EQ_past_time_class3_color");
-  past_time_class4_cl_name = get_string_resource("eq_past_time_class4_color",
-						 "EQ_past_time_class4_color");
-  past_time_class5_cl_name = get_string_resource("eq_past_time_class5_color",
-						 "EQ_past_time_class5_color");
+  past_time_color_name[past_time_class1] = get_string_resource(
+	  "past_time_class1_color", "Past_time_class1_color");
+  past_time_color_name[past_time_class2] = get_string_resource(
+	  "past_time_class2_color", "Past_time_class2_color");
+  past_time_color_name[past_time_class3] = get_string_resource(
+	  "past_time_class3_color", "Past_time_class3_color");
+  past_time_color_name[past_time_class4] = get_string_resource(
+	  "past_time_class4_color", "Past_time_class4_color");
+  past_time_color_name[past_time_class5] = get_string_resource(
+	  "past_time_class5_color", "Past_time_class5_color");
 
   /* various sanity checks on simple resources
    */
@@ -456,15 +448,12 @@ static void init_x_colors()
       tmp += 3;
     }
 
-      past_time_class1_cl = get_color (dsply, past_time_class1_cl_name);
-      past_time_class2_cl = get_color (dsply, past_time_class2_cl_name);
-      past_time_class3_cl = get_color (dsply, past_time_class3_cl_name);
-      past_time_class4_cl = get_color (dsply, past_time_class4_cl_name);
-      past_time_class5_cl = get_color (dsply, past_time_class5_cl_name);
+    for (i = 0; i < NUM_PAST_TIME_CLASS; ++i)
+      past_time_color[i] = get_color (dsply, past_time_color_name[i]);
 
-      radius_unit = wdth > hght ? hght/500 : wdth/500;
-      if (radius_unit == 0)
-	  radius_unit = 1; // minmum 1 pixel unit
+    radius_unit = wdth > hght ? hght/500 : wdth/500;
+    if (radius_unit == 0)
+      radius_unit = 1; // minmum 1 pixel unit
   }
 }
 
@@ -1679,38 +1668,10 @@ draw_earthquake_location (Display *dpy, earthquake_list_t *list)
 	x = XPROJECT(pos[0]);
 	y = YPROJECT(pos[1]);
 
-	switch (list->item[i].past_time_class) {
-	case past_time_class1:
-	    fill_color = past_time_class1_cl;
-	    break;
-	case past_time_class2:
-	    fill_color = past_time_class2_cl;
-	    break;
-	case past_time_class3:
-	    fill_color = past_time_class3_cl;
-	    break;
-	case past_time_class4:
-	    fill_color = past_time_class4_cl;
-	    break;
-	default:
-	    fill_color = past_time_class5_cl;
-	    break;
-	} // end switch
-	// find the radius to draw
-	if (list->item[i].magnitude >= 8.0) {
-	    radius = radius_unit * 18;
-	} else if (list->item[i].magnitude >= 7.0) {
-	    radius = radius_unit * 12;
-	} else if (list->item[i].magnitude >= 6.0) {
-	    radius = radius_unit * 8;
-	} else if (list->item[i].magnitude >= 5.0) {
-	    radius = radius_unit * 5;
-	} else if (list->item[i].magnitude >= 3.0) {
-	    radius = radius_unit * 3;
-	} else if (list->item[i].magnitude >= 2.0) {
-	    radius = radius_unit * 2;
-	} else
-	    radius = radius_unit;
+	fill_color = past_time_color[list->item[i].past_time_class];
+
+	// calcule the radius to draw
+	radius = radius_unit * list->item[i].radius_factor;
 
 	// fill a circle
 	XSetForeground (dpy, gc, fill_color);

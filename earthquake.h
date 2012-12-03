@@ -6,6 +6,8 @@ typedef enum {
    past_time_class4, past_time_class5
 } past_time_t;
 
+#define NUM_PAST_TIME_CLASS 5
+
 typedef struct {
     time_t time;
     double lat;
@@ -13,6 +15,7 @@ typedef struct {
     double pos[3];
     float magnitude;
     past_time_t past_time_class;
+    unsigned char radius_factor;
 //    float depth;
 } earthquake_info_t;
 

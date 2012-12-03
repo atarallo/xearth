@@ -66,7 +66,7 @@ get_earthquake_data (void)
     pid = fork ();
     if (pid == 0) { // child
 	chdir (DEFAULT_EARTHQUAKE_DATA_DIR); 
-	execlp ("wget", "wget", "-N", EARTHQUAKE_INFO_URL, NULL);
+	execlp ("wget", "wget", "-Nq", EARTHQUAKE_INFO_URL, NULL);
     } else if (pid > 0) { // parent
 	int status;
 	waitpid (pid, &status, 0);
@@ -194,6 +194,7 @@ load_earthquake_marker (void)
     time_t    tm_diff;
     double    lat;
     double    lon;
+    float     mag;
 
     FILE *fp = fopen (EARTHQUAKE_FILE, "r");
 
@@ -272,8 +273,26 @@ load_earthquake_marker (void)
         earthquake_lst.item[earthquake_lst.count].lon = lon;
         // magnitude
         token = strtok_r (NULL, ",", &save_ptr);
-        earthquake_lst.item[earthquake_lst.count].magnitude = strtof (token,
-                                                                        NULL);
+        mag = strtof (token, NULL);
+        earthquake_lst.item[earthquake_lst.count].magnitude = mag;
+        // find radius factor
+        if (mag >= 8.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 18;
+        else if (mag >= 7.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 12;
+        else if (mag >= 6.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 8;
+        else if (mag >= 5.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 6;
+        else if (mag >= 4.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 4;
+        else if (mag >= 3.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 3;
+        else if (mag >= 2.0)
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 2;
+        else
+            earthquake_lst.item[earthquake_lst.count].radius_factor = 1;
+
         // preculated 3 positions
         earthquake_lst.item[earthquake_lst.count].pos[0] = sin (lon)
                                                            * cos (lat);
