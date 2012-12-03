@@ -50,6 +50,9 @@ static earthquake_list_t earthquake_lst = {
     .count = 0,
 };
 
+static void update_ele_past_time_class (earthquake_info_t *ele);
+static void update_earthquake_past_time_class (void);
+
 extern time_t current_time;
 
 void
@@ -70,22 +73,17 @@ get_earthquake_data (void)
     } else if (pid > 0) { // parent
 	int status;
 	waitpid (pid, &status, 0);
-	if (WEXITSTATUS(status)) {
-	    exit (1);
-	} // end if
-    } else {
-	fprintf (stderr, "failed to fork(): %s\n", strerror (errno));
-	exit (1);
     } // end if
     if (stat (EARTHQUAKE_FILE, &file_stat) < 0) {
-        fprintf (stderr, "stat earth quake dat file failed: %s\n",
-                 strerror (errno));
-        exit (1);
+        // not a fatal error, just continue
+        return;
     } // end if
     cur_dat_file_mtime = file_stat.st_mtime;
     if (cur_dat_file_mtime != pre_dat_file_mtime) {
         pre_dat_file_mtime = cur_dat_file_mtime;
         load_earthquake_marker ();
+    } else {
+        update_earthquake_past_time_class ();
     } // end if
     last_check_time = current_time;
 } // end get_earthquake_data
@@ -184,6 +182,8 @@ get_month (const char *mon)
 #define PAST_2DAYS  (2 * PAST_DAY)
 #define PAST_4DAYS  (4 * PAST_DAY)
 
+static void update_ele_data (earthquake_info_t *ele);
+
 static void
 load_earthquake_marker (void)
 {
@@ -191,7 +191,6 @@ load_earthquake_marker (void)
     char      *save_ptr;
     char      *token;
     struct tm tm;
-    double    tm_diff;
     double    lat;
     double    lon;
     float     mag;
@@ -243,24 +242,8 @@ load_earthquake_marker (void)
         tm.tm_sec = strtol (token, NULL, 10);
 
         earthquake_lst.item[earthquake_lst.count].time = timegm (&tm);
-        tm_diff = difftime(current_time,
-                           earthquake_lst.item[earthquake_lst.count].time);
-        if (tm_diff <= PAST_2HRS) {
-            earthquake_lst.item[earthquake_lst.count].past_time_class
-                = past_time_class1;
-        } else if (tm_diff <= PAST_DAY) {
-            earthquake_lst.item[earthquake_lst.count].past_time_class
-                = past_time_class2;
-        } else if (tm_diff <= PAST_2DAYS) {
-            earthquake_lst.item[earthquake_lst.count].past_time_class
-                = past_time_class3;
-        } else if (tm_diff <= PAST_4DAYS) {
-            earthquake_lst.item[earthquake_lst.count].past_time_class
-                = past_time_class4;
-        } else {
-            earthquake_lst.item[earthquake_lst.count].past_time_class
-                = past_time_class5;
-        }
+        update_ele_past_time_class (earthquake_lst.item + earthquake_lst.count);
+
         // skip to next token start
         save_ptr += 5;
         // lat
@@ -276,31 +259,8 @@ load_earthquake_marker (void)
         token = strtok_r (NULL, ",", &save_ptr);
         mag = strtof (token, NULL);
         earthquake_lst.item[earthquake_lst.count].magnitude = mag;
-        // find radius factor
-        if (mag >= 8.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 18;
-        else if (mag >= 7.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 12;
-        else if (mag >= 6.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 8;
-        else if (mag >= 5.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 6;
-        else if (mag >= 4.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 4;
-        else if (mag >= 3.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 3;
-        else if (mag >= 2.0)
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 2;
-        else
-            earthquake_lst.item[earthquake_lst.count].radius_factor = 1;
 
-        // preculated 3 positions
-        earthquake_lst.item[earthquake_lst.count].pos[0] = sin (lon)
-                                                           * cos (lat);
-        earthquake_lst.item[earthquake_lst.count].pos[1] = sin (lat);
-        earthquake_lst.item[earthquake_lst.count].pos[2] = cos (lon)
-                                                           * cos (lat);
-
+        update_ele_data (earthquake_lst.item + earthquake_lst.count);
 #if 0
         // depth
         token = strtok_r (NULL, ",", &save_ptr);
@@ -312,4 +272,61 @@ load_earthquake_marker (void)
     printf ("Total of %d earthquake entries loaded.\n", earthquake_lst.count);
 } // end load_earthquake_marker
 
+
+static void
+update_ele_data (earthquake_info_t *ele)
+{
+    // find radius factor
+    if (ele->magnitude >= 8.0)
+        ele->radius_factor = 18;
+    else if (ele->magnitude >= 7.0)
+        ele->radius_factor = 12;
+    else if (ele->magnitude >= 6.0)
+        ele->radius_factor = 8;
+    else if (ele->magnitude >= 5.0)
+        ele->radius_factor = 6;
+    else if (ele->magnitude >= 4.0)
+        ele->radius_factor = 4;
+    else if (ele->magnitude >= 3.0)
+        ele->radius_factor = 3;
+    else if (ele->magnitude >= 2.0)
+        ele->radius_factor = 2;
+    else
+        ele->radius_factor = 1;
+
+    // preculated 3 positions
+    ele->pos[0] = sin (ele->lon) * cos (ele->lat);
+    ele->pos[1] = sin (ele->lat);
+    ele->pos[2] = cos (ele->lon);
+} // end update_ele_data
+
+static void
+update_ele_past_time_class (earthquake_info_t *ele)
+{
+    double time_diff;
+
+    time_diff = difftime (current_time, ele->time);
+
+    if (time_diff <= PAST_2HRS) {
+        ele->past_time_class = past_time_class1;
+    } else if (time_diff <= PAST_DAY) {
+        ele->past_time_class = past_time_class2;
+    } else if (time_diff <= PAST_2DAYS) {
+        ele->past_time_class = past_time_class3;
+    } else if (time_diff <= PAST_4DAYS) {
+        ele->past_time_class = past_time_class4;
+    } else {
+        ele->past_time_class = past_time_class5;
+    }
+} // end update
+
+static void
+update_earthquake_past_time_class (void)
+{
+    int i;
+
+    for (i = 0; i < earthquake_lst.count; ++i) {
+        update_ele_past_time_class (earthquake_lst.item + i);
+    } // end for
+} // end update_earthquake_past_time_class
 /* vim: set sw=4 ts=8 sts=4 expandtab spell : */
