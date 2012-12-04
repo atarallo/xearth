@@ -46,60 +46,59 @@
 #include "xearth.h"
 #include "kljcpyrt.h"
 
-
-ExtArr extarr_alloc(eltsize)
-     unsigned eltsize;
+ExtArr
+extarr_alloc (eltsize)
+    unsigned eltsize;
 {
-  ExtArr rslt;
+    ExtArr rslt;
 
-  rslt = (ExtArr) malloc((unsigned) sizeof(struct extarr));
-  assert(rslt != NULL);
+    rslt = (ExtArr) malloc ((unsigned) sizeof (struct extarr));
+    assert (rslt != NULL);
 
-  rslt->eltsize = eltsize;
-  rslt->limit   = 1;
-  rslt->count   = 0;
+    rslt->eltsize = eltsize;
+    rslt->limit = 1;
+    rslt->count = 0;
 
-  rslt->body = (void *) malloc((unsigned) eltsize*rslt->limit);
-  assert(rslt->body != NULL);
+    rslt->body = (void *) malloc ((unsigned) eltsize * rslt->limit);
+    assert (rslt->body != NULL);
 
-  return rslt;
+    return rslt;
 }
 
-
-void extarr_free(x)
-     ExtArr x;
+void
+extarr_free (x)
+    ExtArr x;
 {
-  free(x->body);
-  free(x);
+    free (x->body);
+    free (x);
 }
 
-
-void *extarr_next(x)
-     ExtArr x;
+void *
+extarr_next (x)
+    ExtArr x;
 {
-  unsigned eltsize;
-  unsigned limit;
-  unsigned count;
-  void    *body;
-  void    *rslt;
+    unsigned eltsize;
+    unsigned limit;
+    unsigned count;
+    void *body;
+    void *rslt;
 
-  eltsize = x->eltsize;
-  limit   = x->limit;
-  count   = x->count;
-  body    = x->body;
+    eltsize = x->eltsize;
+    limit = x->limit;
+    count = x->count;
+    body = x->body;
 
-  if (count == limit)
-  {
-    limit *= 2;
-    body   = (void *) realloc(body, (unsigned) eltsize*limit);
-    assert(body != NULL);
+    if (count == limit) {
+        limit *= 2;
+        body = (void *) realloc (body, (unsigned) eltsize * limit);
+        assert (body != NULL);
 
-    x->limit = limit;
-    x->body  = body;
-  }
+        x->limit = limit;
+        x->body = body;
+    }
 
-  rslt = (void *) ((char *) body + (count * eltsize));
-  x->count = count + 1;
+    rslt = (void *) ((char *) body + (count * eltsize));
+    x->count = count + 1;
 
-  return rslt;
+    return rslt;
 }

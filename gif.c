@@ -47,82 +47,81 @@
 #include "giflib.h"
 #include "kljcpyrt.h"
 
-static void gif_setup _P((FILE *));
-static int  gif_row _P((u_char *));
-static void gif_cleanup _P((void));
+static void gif_setup _P ((FILE *));
+static int gif_row _P ((u_char *));
+static void gif_cleanup _P ((void));
 
 static u16or32 *dith;
 
-
-void gif_output()
+void
+gif_output ()
 {
-  compute_positions();
-  scan_map();
-  do_dots();
-  gif_setup(stdout);
-  render(gif_row);
-  gif_cleanup();
+    compute_positions ();
+    scan_map ();
+    do_dots ();
+    gif_setup (stdout);
+    render (gif_row);
+    gif_cleanup ();
 }
 
-
-static void gif_setup(s)
-     FILE *s;
+static void
+gif_setup (s)
+    FILE *s;
 {
-  int  i;
-  int  rtn;
-  BYTE cmap[3][256];
+    int i;
+    int rtn;
+    BYTE cmap[3][256];
 
-  if (num_colors > 256)
-    fatal("number of colors must be <= 256 with GIF output");
+    if (num_colors > 256)
+        fatal ("number of colors must be <= 256 with GIF output");
 
-  dither_setup(num_colors);
-  dith = (u16or32 *) malloc((unsigned) sizeof(u16or32) * wdth);
-  assert(dith != NULL);
+    dither_setup (num_colors);
+    dith = (u16or32 *) malloc ((unsigned) sizeof (u16or32) * wdth);
+    assert (dith != NULL);
 
-  for (i=0; i<dither_ncolors; i++)
-  {
-    cmap[0][i] = dither_colormap[i*3+0];
-    cmap[1][i] = dither_colormap[i*3+1];
-    cmap[2][i] = dither_colormap[i*3+2];
-  }
+    for (i = 0; i < dither_ncolors; i++) {
+        cmap[0][i] = dither_colormap[i * 3 + 0];
+        cmap[1][i] = dither_colormap[i * 3 + 1];
+        cmap[2][i] = dither_colormap[i * 3 + 2];
+    }
 
-  rtn = gifout_open_file(s, wdth, hght, dither_ncolors, cmap, 0);
-  assert(rtn == GIFLIB_SUCCESS);
+    rtn = gifout_open_file (s, wdth, hght, dither_ncolors, cmap, 0);
+    assert (rtn == GIFLIB_SUCCESS);
 
-  rtn = gifout_open_image(0, 0, wdth, hght);
-  assert(rtn == GIFLIB_SUCCESS);
+    rtn = gifout_open_image (0, 0, wdth, hght);
+    assert (rtn == GIFLIB_SUCCESS);
 }
 
-
-static int gif_row(row)
-     u_char *row;
+static int
+gif_row (row)
+    u_char *row;
 {
-  int      i, i_lim;
-  u16or32 *tmp;
+    int i, i_lim;
+    u16or32 *tmp;
 
-  tmp = dith;
-  dither_row(row, tmp);
+    tmp = dith;
+    dither_row (row, tmp);
 
-  /* use i_lim to encourage compilers to register loop limit
-   */
-  i_lim = wdth;
-  for (i=0; i<i_lim; i++)
-    gifout_put_pixel((int) tmp[i]);
+    /* use i_lim to encourage compilers to register loop limit
+     */
+    i_lim = wdth;
+    for (i = 0; i < i_lim; i++)
+        gifout_put_pixel ((int) tmp[i]);
 
-  return 0;
+    return 0;
 }
 
-
-static void gif_cleanup()
+static void
+gif_cleanup ()
 {
-  int rtn;
+    int rtn;
 
-  rtn = gifout_close_image();
-  assert(rtn == GIFLIB_SUCCESS);
+    rtn = gifout_close_image ();
+    assert (rtn == GIFLIB_SUCCESS);
 
-  rtn = gifout_close_file();
-  assert(rtn == GIFLIB_SUCCESS);
+    rtn = gifout_close_file ();
+    assert (rtn == GIFLIB_SUCCESS);
 
-  dither_cleanup();
-  free(dith);
+    dither_cleanup ();
+    free (dith);
 }

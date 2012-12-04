@@ -48,118 +48,116 @@
 
 #include <gd.h>
 
-static void png_setup _P((void));
-static int  png_row _P((u_char *));
-static void png_cleanup _P((FILE *));
-static void png_truecolor_setup _P((void));
-static int  png_truecolor_row _P((u_char *));
-static void png_truecolor_cleanup _P((FILE *));
+static void png_setup _P ((void));
+static int png_row _P ((u_char *));
+static void png_cleanup _P ((FILE *));
+static void png_truecolor_setup _P ((void));
+static int png_truecolor_row _P ((u_char *));
+static void png_truecolor_cleanup _P ((FILE *));
 
 static u16or32 *dith;
 static gdImagePtr img;
 static int y;
 static int colors[256];
 
-
-void png_output()
+void
+png_output ()
 {
-  compute_positions();
-  scan_map();
-  do_dots();
-  if (num_colors > 256)
-  {
-    png_truecolor_setup();
-    render(png_truecolor_row);
-    png_truecolor_cleanup(stdout);
-  }
-  else
-  {
-    png_setup();
-    render(png_row);
-    png_cleanup(stdout);
-  }
+    compute_positions ();
+    scan_map ();
+    do_dots ();
+    if (num_colors > 256) {
+        png_truecolor_setup ();
+        render (png_truecolor_row);
+        png_truecolor_cleanup (stdout);
+    } else {
+        png_setup ();
+        render (png_row);
+        png_cleanup (stdout);
+    }
 }
 
-
-static void png_setup()
+static void
+png_setup ()
 {
-  int  i;
+    int i;
 
-  img = gdImageCreate(wdth, hght);
+    img = gdImageCreate (wdth, hght);
 
-  dither_setup(num_colors);
-  dith = (u16or32 *) malloc((unsigned) sizeof(u16or32) * wdth);
-  assert(dith != NULL);
+    dither_setup (num_colors);
+    dith = (u16or32 *) malloc ((unsigned) sizeof (u16or32) * wdth);
+    assert (dith != NULL);
 
-  for (i=0; i<dither_ncolors; i++)
-  {
-    colors[i] = gdImageColorAllocate(img,
-                                     dither_colormap[i*3+0],
-                                     dither_colormap[i*3+1],
-                                     dither_colormap[i*3+2]);
-  }
+    for (i = 0; i < dither_ncolors; i++) {
+        colors[i] = gdImageColorAllocate (img,
+                                          dither_colormap[i * 3 + 0],
+                                          dither_colormap[i * 3 + 1],
+                                          dither_colormap[i * 3 + 2]);
+    }
 
-  y = 0;
+    y = 0;
 }
 
-
-static int png_row(row)
-     u_char *row;
+static int
+png_row (row)
+    u_char *row;
 {
-  int      i, i_lim;
-  u16or32 *tmp;
+    int i, i_lim;
+    u16or32 *tmp;
 
-  tmp = dith;
-  dither_row(row, tmp);
+    tmp = dith;
+    dither_row (row, tmp);
 
-  /* use i_lim to encourage compilers to register loop limit
-   */
-  i_lim = wdth;
-  for (i=0; i<i_lim; i++)
-    gdImageSetPixel(img, i, y, colors[tmp[i]]);
+    /* use i_lim to encourage compilers to register loop limit
+     */
+    i_lim = wdth;
+    for (i = 0; i < i_lim; i++)
+        gdImageSetPixel (img, i, y, colors[tmp[i]]);
 
-  y += 1;
+    y += 1;
 
-  return 0;
+    return 0;
 }
 
-
-static void png_cleanup(s)
-     FILE *s;
+static void
+png_cleanup (s)
+    FILE *s;
 {
-  gdImagePng(img, s);
-  gdImageDestroy(img);
+    gdImagePng (img, s);
+    gdImageDestroy (img);
 
-  dither_cleanup();
-  free(dith);
+    dither_cleanup ();
+    free (dith);
 }
 
-
-static void png_truecolor_setup()
+static void
+png_truecolor_setup ()
 {
-  img = gdImageCreateTrueColor(wdth, hght);
+    img = gdImageCreateTrueColor (wdth, hght);
 
-  y = 0;
+    y = 0;
 }
 
-
-static int png_truecolor_row(row)
-     u_char *row;
+static int
+png_truecolor_row (row)
+    u_char *row;
 {
-  int      i;
+    int i;
 
-  for (i=0; i<wdth; i++)
-    gdImageSetPixel(img, i, y, gdTrueColor(row[i*3+0], row[i*3+1], row[i*3+2]));
+    for (i = 0; i < wdth; i++)
+        gdImageSetPixel (img, i, y,
+                         gdTrueColor (row[i * 3 + 0], row[i * 3 + 1],
+                                      row[i * 3 + 2]));
 
-  y += 1;
+    y += 1;
 
-  return 0;
+    return 0;
 }
 
-
-static void png_truecolor_cleanup(s)
-     FILE *s;
+static void
+png_truecolor_cleanup (s)
+    FILE *s;
 {
-  gdImagePng(img, s);
-  gdImageDestroy(img);
+    gdImagePng (img, s);
+    gdImageDestroy (img);
 }

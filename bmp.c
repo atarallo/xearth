@@ -46,12 +46,12 @@
 #include "xearth.h"
 #include "kljcpyrt.h"
 
-static void bmp_setup _P((void));
-static int  bmp_row _P((u_char *));
-static void bmp_cleanup _P((void));
-static void bmp_truecolor_setup _P((void));
-static int  bmp_truecolor_row _P((u_char *));
-static void bmp_truecolor_cleanup _P((void));
+static void bmp_setup _P ((void));
+static int bmp_row _P ((u_char *));
+static void bmp_cleanup _P ((void));
+static void bmp_truecolor_setup _P ((void));
+static int bmp_truecolor_row _P ((u_char *));
+static void bmp_truecolor_cleanup _P ((void));
 
 #pragma pack(push, 1)
 
@@ -62,7 +62,7 @@ typedef unsigned long DWORD;
 
 #define BI_RGB (0)
 
-struct __attribute__((__packed__)) BITMAPFILEHEADER {
+struct __attribute__ ((__packed__)) BITMAPFILEHEADER {
     char bfType[2];
     DWORD bfSize;
     WORD bfReserved1;
@@ -70,7 +70,7 @@ struct __attribute__((__packed__)) BITMAPFILEHEADER {
     DWORD bfOffBits;
 };
 
-struct __attribute__((__packed__)) BITMAPINFOHEADER {
+struct __attribute__ ((__packed__)) BITMAPINFOHEADER {
     DWORD biSize;
     LONG biWidth;
     LONG biHeight;
@@ -84,7 +84,7 @@ struct __attribute__((__packed__)) BITMAPINFOHEADER {
     DWORD biClrImportant;
 };
 
-struct __attribute__((__packed__)) RGBQUAD {
+struct __attribute__ ((__packed__)) RGBQUAD {
     BYTE rgbBlue;
     BYTE rgbGreen;
     BYTE rgbRed;
@@ -95,153 +95,148 @@ struct __attribute__((__packed__)) RGBQUAD {
 
 static u16or32 *dith;
 
-
-void bmp_output()
+void
+bmp_output ()
 {
-  compute_positions();
-  scan_map();
-  do_dots();
-  if (num_colors > 256)
-  {
-    bmp_truecolor_setup();
-    render(bmp_truecolor_row);
-    bmp_truecolor_cleanup();
-  }
-  else
-  {
-    bmp_setup();
-    render(bmp_row);
-    bmp_cleanup();
-  }
+    compute_positions ();
+    scan_map ();
+    do_dots ();
+    if (num_colors > 256) {
+        bmp_truecolor_setup ();
+        render (bmp_truecolor_row);
+        bmp_truecolor_cleanup ();
+    } else {
+        bmp_setup ();
+        render (bmp_row);
+        bmp_cleanup ();
+    }
 }
 
-
-static void bmp_setup()
+static void
+bmp_setup ()
 {
-  int  i;
-  struct BITMAPFILEHEADER bmf;
-  struct BITMAPINFOHEADER bmi;
+    int i;
+    struct BITMAPFILEHEADER bmf;
+    struct BITMAPINFOHEADER bmi;
 
-  dither_setup(num_colors);
-  dith = (u16or32 *) malloc((unsigned) sizeof(u16or32) * wdth);
-  assert(dith != NULL);
+    dither_setup (num_colors);
+    dith = (u16or32 *) malloc ((unsigned) sizeof (u16or32) * wdth);
+    assert (dith != NULL);
 
-  assert(sizeof(struct BITMAPFILEHEADER) == 14);
-  assert(sizeof(struct BITMAPINFOHEADER) == 40);
+    assert (sizeof (struct BITMAPFILEHEADER) == 14);
+    assert (sizeof (struct BITMAPINFOHEADER) == 40);
 
-  bmf.bfType[0] = 'B';
-  bmf.bfType[1] = 'M';
-  bmf.bfSize = sizeof(struct BITMAPFILEHEADER)
-             + sizeof(struct BITMAPINFOHEADER)
-             + num_colors * sizeof(struct RGBQUAD)
-             + hght * 4 * ((wdth + 3) / 4);
-  bmf.bfReserved1 = 0;
-  bmf.bfReserved2 = 0;
-  bmf.bfOffBits = sizeof(struct BITMAPFILEHEADER)
-                + sizeof(struct BITMAPINFOHEADER)
-                + num_colors * sizeof(struct RGBQUAD);
-  fwrite(&bmf, 1, sizeof(bmf), stdout);
+    bmf.bfType[0] = 'B';
+    bmf.bfType[1] = 'M';
+    bmf.bfSize = sizeof (struct BITMAPFILEHEADER)
+        + sizeof (struct BITMAPINFOHEADER)
+        + num_colors * sizeof (struct RGBQUAD)
+        + hght * 4 * ((wdth + 3) / 4);
+    bmf.bfReserved1 = 0;
+    bmf.bfReserved2 = 0;
+    bmf.bfOffBits = sizeof (struct BITMAPFILEHEADER)
+        + sizeof (struct BITMAPINFOHEADER)
+        + num_colors * sizeof (struct RGBQUAD);
+    fwrite (&bmf, 1, sizeof (bmf), stdout);
 
-  bmi.biSize = sizeof(bmi);
-  bmi.biWidth = wdth;
-  bmi.biHeight = -hght;
-  bmi.biPlanes = 1;
-  bmi.biBitCount = 8;
-  bmi.biCompression = BI_RGB;
-  bmi.biSizeImage = hght * 4 * ((wdth + 3) / 4);
-  bmi.biXPelsPerMeter = 0;
-  bmi.biYPelsPerMeter = 0;
-  bmi.biClrUsed = num_colors;
-  bmi.biClrImportant = num_colors;
-  fwrite(&bmi, 1, sizeof(bmi), stdout);
+    bmi.biSize = sizeof (bmi);
+    bmi.biWidth = wdth;
+    bmi.biHeight = -hght;
+    bmi.biPlanes = 1;
+    bmi.biBitCount = 8;
+    bmi.biCompression = BI_RGB;
+    bmi.biSizeImage = hght * 4 * ((wdth + 3) / 4);
+    bmi.biXPelsPerMeter = 0;
+    bmi.biYPelsPerMeter = 0;
+    bmi.biClrUsed = num_colors;
+    bmi.biClrImportant = num_colors;
+    fwrite (&bmi, 1, sizeof (bmi), stdout);
 
-  for (i=0; i<dither_ncolors; i++)
-  {
-    struct RGBQUAD rgb;
-    rgb.rgbBlue = dither_colormap[i*3+2];
-    rgb.rgbGreen = dither_colormap[i*3+1];
-    rgb.rgbRed = dither_colormap[i*3+0];
-    rgb.rgbReserved = 0;
-    fwrite(&rgb, 1, sizeof(rgb), stdout);
-  }
+    for (i = 0; i < dither_ncolors; i++) {
+        struct RGBQUAD rgb;
+        rgb.rgbBlue = dither_colormap[i * 3 + 2];
+        rgb.rgbGreen = dither_colormap[i * 3 + 1];
+        rgb.rgbRed = dither_colormap[i * 3 + 0];
+        rgb.rgbReserved = 0;
+        fwrite (&rgb, 1, sizeof (rgb), stdout);
+    }
 }
 
-
-static int bmp_row(row)
-     u_char *row;
+static int
+bmp_row (row)
+    u_char *row;
 {
-  int      i, i_lim;
-  u16or32 *tmp;
+    int i, i_lim;
+    u16or32 *tmp;
 
-  tmp = dith;
-  dither_row(row, tmp);
+    tmp = dith;
+    dither_row (row, tmp);
 
-  i_lim = 4 * ((wdth + 3) / 4);
-  for (i = 0; i < i_lim; i++)
-    fwrite(tmp+i, 1, 1, stdout);
+    i_lim = 4 * ((wdth + 3) / 4);
+    for (i = 0; i < i_lim; i++)
+        fwrite (tmp + i, 1, 1, stdout);
 
-  return 0;
+    return 0;
 }
 
-
-static void bmp_cleanup()
+static void
+bmp_cleanup ()
 {
-  dither_cleanup();
-  free(dith);
+    dither_cleanup ();
+    free (dith);
 }
 
-
-static void bmp_truecolor_setup()
+static void
+bmp_truecolor_setup ()
 {
-  struct BITMAPFILEHEADER bmf;
-  struct BITMAPINFOHEADER bmi;
+    struct BITMAPFILEHEADER bmf;
+    struct BITMAPINFOHEADER bmi;
 
-  assert(sizeof(struct BITMAPFILEHEADER) == 14);
-  assert(sizeof(struct BITMAPINFOHEADER) == 40);
+    assert (sizeof (struct BITMAPFILEHEADER) == 14);
+    assert (sizeof (struct BITMAPINFOHEADER) == 40);
 
-  bmf.bfType[0] = 'B';
-  bmf.bfType[1] = 'M';
-  bmf.bfSize = sizeof(struct BITMAPFILEHEADER)
-             + sizeof(struct BITMAPINFOHEADER)
-             + hght * 4 * ((3 * wdth + 3) / 4);
-  bmf.bfReserved1 = 0;
-  bmf.bfReserved2 = 0;
-  bmf.bfOffBits = sizeof(struct BITMAPFILEHEADER)
-                + sizeof(struct BITMAPINFOHEADER);
-  fwrite(&bmf, 1, sizeof(bmf), stdout);
+    bmf.bfType[0] = 'B';
+    bmf.bfType[1] = 'M';
+    bmf.bfSize = sizeof (struct BITMAPFILEHEADER)
+        + sizeof (struct BITMAPINFOHEADER)
+        + hght * 4 * ((3 * wdth + 3) / 4);
+    bmf.bfReserved1 = 0;
+    bmf.bfReserved2 = 0;
+    bmf.bfOffBits = sizeof (struct BITMAPFILEHEADER)
+        + sizeof (struct BITMAPINFOHEADER);
+    fwrite (&bmf, 1, sizeof (bmf), stdout);
 
-  bmi.biSize = sizeof(bmi);
-  bmi.biWidth = wdth;
-  bmi.biHeight = -hght;
-  bmi.biPlanes = 1;
-  bmi.biBitCount = 24;
-  bmi.biCompression = BI_RGB;
-  bmi.biSizeImage = hght * 4 * ((3 * wdth + 3) / 4);
-  bmi.biXPelsPerMeter = 0;
-  bmi.biYPelsPerMeter = 0;
-  bmi.biClrUsed = 0;
-  bmi.biClrImportant = 0;
-  fwrite(&bmi, 1, sizeof(bmi), stdout);
+    bmi.biSize = sizeof (bmi);
+    bmi.biWidth = wdth;
+    bmi.biHeight = -hght;
+    bmi.biPlanes = 1;
+    bmi.biBitCount = 24;
+    bmi.biCompression = BI_RGB;
+    bmi.biSizeImage = hght * 4 * ((3 * wdth + 3) / 4);
+    bmi.biXPelsPerMeter = 0;
+    bmi.biYPelsPerMeter = 0;
+    bmi.biClrUsed = 0;
+    bmi.biClrImportant = 0;
+    fwrite (&bmi, 1, sizeof (bmi), stdout);
 }
 
-
-static int bmp_truecolor_row(row)
-     u_char *row;
+static int
+bmp_truecolor_row (row)
+    u_char *row;
 {
-  int i, i_lim;
+    int i, i_lim;
 
-  i_lim = 4 * ((wdth + 3) / 4);
-  for (i = 0; i < i_lim; i++)
-  {
-    fwrite(row+3*i+2, 1, 1, stdout);
-    fwrite(row+3*i+1, 1, 1, stdout);
-    fwrite(row+3*i+0, 1, 1, stdout);
-  }
+    i_lim = 4 * ((wdth + 3) / 4);
+    for (i = 0; i < i_lim; i++) {
+        fwrite (row + 3 * i + 2, 1, 1, stdout);
+        fwrite (row + 3 * i + 1, 1, 1, stdout);
+        fwrite (row + 3 * i + 0, 1, 1, stdout);
+    }
 
-  return 0;
+    return 0;
 }
 
-
-static void bmp_truecolor_cleanup()
+static void
+bmp_truecolor_cleanup ()
 {
 }

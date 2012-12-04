@@ -2,7 +2,8 @@
 
 #include "font.inc"
 
-void font_extent(s, height, width)
+void
+font_extent (s, height, width)
     const char *s;
     int *height;
     int *width;
@@ -15,8 +16,8 @@ void font_extent(s, height, width)
     }
 }
 
-
-void font_draw(x, y, s, dots)
+void
+font_draw (x, y, s, dots)
     int x;
     int y;
     const char *s;
@@ -32,9 +33,9 @@ void font_draw(x, y, s, dots)
         for (cy = 0; cy < Font_height; cy++) {
             for (cx = 0; cx < Font_width[c]; cx++) {
                 if (Font_data[c][cy * w + (cx / 8)] & (0x80 >> (cx % 8))) {
-                    new = (ScanDot *) extarr_next(dots);
-                    new->x    = x + cx;
-                    new->y    = y + cy;
+                    new = (ScanDot *) extarr_next (dots);
+                    new->x = x + cx;
+                    new->y = y + cy;
                     new->type = DotTypeStar;
                 }
             }

@@ -48,50 +48,52 @@
 
 #include <gd.h>
 
-static void jpeg_setup _P((void));
-static int  jpeg_row _P((u_char *));
-static void jpeg_cleanup _P((FILE *));
+static void jpeg_setup _P ((void));
+static int jpeg_row _P ((u_char *));
+static void jpeg_cleanup _P ((FILE *));
 
 static gdImagePtr img;
 static int y;
 
-
-void jpeg_output()
+void
+jpeg_output ()
 {
-  compute_positions();
-  scan_map();
-  do_dots();
-  jpeg_setup();
-  render(jpeg_row);
-  jpeg_cleanup(stdout);
+    compute_positions ();
+    scan_map ();
+    do_dots ();
+    jpeg_setup ();
+    render (jpeg_row);
+    jpeg_cleanup (stdout);
 }
 
-
-static void jpeg_setup()
+static void
+jpeg_setup ()
 {
-  img = gdImageCreateTrueColor(wdth, hght);
+    img = gdImageCreateTrueColor (wdth, hght);
 
-  y = 0;
+    y = 0;
 }
 
-
-static int jpeg_row(row)
-     u_char *row;
+static int
+jpeg_row (row)
+    u_char *row;
 {
-  int      i;
+    int i;
 
-  for (i=0; i<wdth; i++)
-    gdImageSetPixel(img, i, y, gdTrueColor(row[i*3+0], row[i*3+1], row[i*3+2]));
+    for (i = 0; i < wdth; i++)
+        gdImageSetPixel (img, i, y,
+                         gdTrueColor (row[i * 3 + 0], row[i * 3 + 1],
+                                      row[i * 3 + 2]));
 
-  y += 1;
+    y += 1;
 
-  return 0;
+    return 0;
 }
 
-
-static void jpeg_cleanup(s)
-     FILE *s;
+static void
+jpeg_cleanup (s)
+    FILE *s;
 {
-  gdImageJpeg(img, s, 90);
-  gdImageDestroy(img);
+    gdImageJpeg (img, s, 90);
+    gdImageDestroy (img);
 }

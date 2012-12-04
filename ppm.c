@@ -46,40 +46,40 @@
 #include "xearth.h"
 #include "kljcpyrt.h"
 
-static void ppm_setup _P((FILE *));
-static int  ppm_row _P((u_char *));
+static void ppm_setup _P ((FILE *));
+static int ppm_row _P ((u_char *));
 
-static FILE    *outs;
+static FILE *outs;
 static unsigned bytes_per_row;
 
-
-void ppm_output()
+void
+ppm_output ()
 {
-  compute_positions();
-  scan_map();
-  do_dots();
-  ppm_setup(stdout);
-  render(ppm_row);
+    compute_positions ();
+    scan_map ();
+    do_dots ();
+    ppm_setup (stdout);
+    render (ppm_row);
 }
 
-
-static void ppm_setup(s)
-     FILE *s;
+static void
+ppm_setup (s)
+    FILE *s;
 {
-  outs          = s;
-  bytes_per_row = wdth * 3;
+    outs = s;
+    bytes_per_row = wdth * 3;
 
-  fprintf(outs, "P6\n%d %d\n255\n", wdth, hght);
+    fprintf (outs, "P6\n%d %d\n255\n", wdth, hght);
 }
 
-
-static int ppm_row(row)
-     u_char *row;
+static int
+ppm_row (row)
+    u_char *row;
 {
-  int n;
+    int n;
 
-  n = fwrite(row, 1, bytes_per_row, outs);
-  assert(n == bytes_per_row);
+    n = fwrite (row, 1, bytes_per_row, outs);
+    assert (n == bytes_per_row);
 
-  return 0;
+    return 0;
 }

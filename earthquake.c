@@ -24,7 +24,6 @@
 #define EARTHQUAKE_4_WEEK_URL	    "http://earthquake.usgs.gov/earthquakes" \
                                     "/feed/csv/2.5/week"
 
-
 #define DEFAULT_EARTHQUAKE_DATA_DIR ".config/xearth"
 #define EARTHQUAKE_MONTH_FILE	    DEFAULT_EARTHQUAKE_DATA_DIR "/month"
 #define EARTHQUAKE_WEEK_FILE	    DEFAULT_EARTHQUAKE_DATA_DIR "/week"
@@ -41,16 +40,16 @@ static time_t last_check_time = 0;
 
 // the week's data are updated every minute at earthquake.usgs.gov
 // but we only query at most once per 15 minutes
-static time_t earthquake_min_update_intrval = 15 *60;
+static time_t earthquake_min_update_intrval = 15 * 60;
 /* use wget to retrieve the earthquake information */
 static earthquake_info_t earthquake_items[MAX_EARTHQUAKE_ENTRY];
 
 static earthquake_list_t earthquake_lst = {
-    .item  = earthquake_items,
+    .item = earthquake_items,
     .count = 0,
 };
 
-static void update_ele_past_time_class (earthquake_info_t *ele);
+static void update_ele_past_time_class (earthquake_info_t * ele);
 static void update_earthquake_past_time_class (void);
 
 extern time_t current_time;
@@ -64,35 +63,35 @@ get_earthquake_data (void)
     // data file not updated yet, used old data
     if (last_check_time + earthquake_min_update_intrval > current_time)
         return;
-    test_config_dir();
+    test_config_dir ();
     // get earthquake data with wget
     pid = fork ();
-    if (pid == 0) { // child
-	chdir (DEFAULT_EARTHQUAKE_DATA_DIR); 
-	execlp ("wget", "wget", "-Nq", EARTHQUAKE_INFO_URL, NULL);
-    } else if (pid > 0) { // parent
-	int status;
-	waitpid (pid, &status, 0);
-    } // end if
+    if (pid == 0) {     // child
+        chdir (DEFAULT_EARTHQUAKE_DATA_DIR);
+        execlp ("wget", "wget", "-Nq", EARTHQUAKE_INFO_URL, NULL);
+    } else if (pid > 0) {       // parent
+        int status;
+        waitpid (pid, &status, 0);
+    }                   // end if
     if (stat (EARTHQUAKE_FILE, &file_stat) < 0) {
         // not a fatal error, just continue
         return;
-    } // end if
+    }                   // end if
     cur_dat_file_mtime = file_stat.st_mtime;
     if (cur_dat_file_mtime != pre_dat_file_mtime) {
         pre_dat_file_mtime = cur_dat_file_mtime;
         load_earthquake_marker ();
     } else {
         update_earthquake_past_time_class ();
-    } // end if
+    }                   // end if
     last_check_time = current_time;
-} // end get_earthquake_data
+}                       // end get_earthquake_data
 
 earthquake_list_t *
 get_earthquake_list (void)
 {
     return &earthquake_lst;
-} // end get_earthquake_list
+}                       // end get_earthquake_list
 
 static void
 test_config_dir (void)
@@ -101,108 +100,108 @@ test_config_dir (void)
     struct passwd *pw = getpwuid (getuid ());
 
     if (pw == NULL) {
-	fprintf (stderr, "Failed to get home directory: %s\n",
-	         strerror (errno));
-	exit (1);
+        fprintf (stderr, "Failed to get home directory: %s\n",
+                 strerror (errno));
+        exit (1);
     }
     chdir (pw->pw_dir);
     dir = opendir (DEFAULT_EARTHQUAKE_DATA_DIR);
     if (dir == NULL) {
-	if (mkdir (DEFAULT_EARTHQUAKE_DATA_DIR, 0700) < 0) {
-	    fprintf (stderr, "Failed to create directory: %s\n",
-		     strerror (errno));
-	    exit (1);
-	} // end if
-    } // end if
-} // end test_config_dir
+        if (mkdir (DEFAULT_EARTHQUAKE_DATA_DIR, 0700) < 0) {
+            fprintf (stderr, "Failed to create directory: %s\n",
+                     strerror (errno));
+            exit (1);
+        }               // end if
+    }                   // end if
+}                       // end test_config_dir
 
 static int
 get_week_of_day (const char *day)
 {
     switch (day[0]) {
-    case 'F': // Friday
+    case 'F':          // Friday
         return 5;
-    case 'M': // Monday
+    case 'M':          // Monday
         return 1;
     case 'T':
-        if (day[1] == 'u') // Tuesday
+        if (day[1] == 'u')      // Tuesday
             return 2;
-        else // Thursday
+        else            // Thursday
             return 4;
-    case 'W': // Wednesday
+    case 'W':          // Wednesday
         return 3;
     case 'S':
-        if (day[1] =='u') // Sunday
+        if (day[1] == 'u')      // Sunday
             return 0;
-        else // Saturday
+        else            // Saturday
             return 6;
     default:
         return 0;
-    } // end switch
-} // end get_week_of_day
+    }                   // end switch
+}                       // end get_week_of_day
 
 static int
 get_month (const char *mon)
 {
     switch (mon[0]) {
     case 'J':
-        if (mon[1] == 'a') // January
+        if (mon[1] == 'a')      // January
             return 0;
-        if (mon[2] == 'n') // June
+        if (mon[2] == 'n')      // June
             return 5;
         // July
         return 6;
-    case 'F': // February
+    case 'F':          // February
         return 1;
     case 'M':
-        if (mon[2] == 'r') // March
+        if (mon[2] == 'r')      // March
             return 2;
-        else // May
+        else            // May
             return 4;
     case 'A':
-        if (mon[1] == 'p') // April
+        if (mon[1] == 'p')      // April
             return 3;
-        else // August
+        else            // August
             return 7;
-    case 'S': // September
+    case 'S':          // September
         return 8;
-    case 'O': // October
+    case 'O':          // October
         return 9;
-    case 'N': // November
+    case 'N':          // November
         return 10;
-    case 'D': // December
+    case 'D':          // December
         return 11;
     default:
         return 0;
-    } // end switch
-} // end get_month
+    }                   // end switch
+}                       // end get_month
 
 #define PAST_2HRS   (2 * 60 * 60)
 #define PAST_DAY    (12 * PAST_2HRS)
 #define PAST_2DAYS  (2 * PAST_DAY)
 #define PAST_4DAYS  (4 * PAST_DAY)
 
-static void update_ele_data (earthquake_info_t *ele);
+static void update_ele_data (earthquake_info_t * ele);
 
 static void
 load_earthquake_marker (void)
 {
-    char      buf[512];
-    char      *save_ptr;
-    char      *token;
+    char buf[512];
+    char *save_ptr;
+    char *token;
     struct tm tm;
-    double    lat;
-    double    lon;
-    float     mag;
+    double lat;
+    double lon;
+    float mag;
 
     FILE *fp = fopen (EARTHQUAKE_FILE, "r");
 
     if (!fp) {
-        fprintf(stderr, "Failed to open ~/%s: %s\n", EARTHQUAKE_FILE,
-                strerror (errno));
+        fprintf (stderr, "Failed to open ~/%s: %s\n", EARTHQUAKE_FILE,
+                 strerror (errno));
         exit (1);
-    } // end if
-    fgets (buf, sizeof (buf), fp); // skip the first title line
+    }                   // end if
+    fgets (buf, sizeof (buf), fp);      // skip the first title line
     earthquake_lst.count = 0;
     printf ("Loading earthquake data file ...\n");
     while (earthquake_lst.count < MAX_EARTHQUAKE_ENTRY
@@ -214,14 +213,14 @@ load_earthquake_marker (void)
         // skip Version
         token = strtok_r (NULL, ",", &save_ptr);
         // Datetime
-        ++save_ptr; // skip the opening "
+        ++save_ptr;     // skip the opening "
         token = save_ptr;
         memset (&tm, 0, sizeof (tm));
         // day
         token = strtok_r (NULL, ",", &save_ptr);
         tm.tm_wday = get_week_of_day (token);
         // month
-        ++save_ptr; // skip the first white space
+        ++save_ptr;     // skip the first white space
         token = strtok_r (NULL, " ", &save_ptr);
         tm.tm_mon = get_month (token);
         // day
@@ -242,18 +241,19 @@ load_earthquake_marker (void)
         tm.tm_sec = strtol (token, NULL, 10);
 
         earthquake_lst.item[earthquake_lst.count].time = timegm (&tm);
-        update_ele_past_time_class (earthquake_lst.item + earthquake_lst.count);
+        update_ele_past_time_class (earthquake_lst.item +
+                                    earthquake_lst.count);
 
         // skip to next token start
         save_ptr += 5;
         // lat
         token = strtok_r (NULL, ",", &save_ptr);
-        lat = strtod (token, NULL) * (M_PI/180);
+        lat = strtod (token, NULL) * (M_PI / 180);
         earthquake_lst.item[earthquake_lst.count].lat = lat;
 
         // lon
         token = strtok_r (NULL, ",", &save_ptr);
-        lon = strtod (token, NULL) * (M_PI/180);
+        lon = strtod (token, NULL) * (M_PI / 180);
         earthquake_lst.item[earthquake_lst.count].lon = lon;
         // magnitude
         token = strtok_r (NULL, ",", &save_ptr);
@@ -267,14 +267,13 @@ load_earthquake_marker (void)
         earthquake_list[earthquake_count].depth = strtof (token, NULL);
 #endif
         ++earthquake_lst.count;
-    } // end while
+    }                   // end while
     fclose (fp);
     printf ("Total of %d earthquake entries loaded.\n", earthquake_lst.count);
-} // end load_earthquake_marker
-
+}                       // end load_earthquake_marker
 
 static void
-update_ele_data (earthquake_info_t *ele)
+update_ele_data (earthquake_info_t * ele)
 {
     // find radius factor
     if (ele->magnitude >= 8.0)
@@ -298,10 +297,10 @@ update_ele_data (earthquake_info_t *ele)
     ele->pos[0] = sin (ele->lon) * cos (ele->lat);
     ele->pos[1] = sin (ele->lat);
     ele->pos[2] = cos (ele->lon);
-} // end update_ele_data
+}                       // end update_ele_data
 
 static void
-update_ele_past_time_class (earthquake_info_t *ele)
+update_ele_past_time_class (earthquake_info_t * ele)
 {
     double time_diff;
 
@@ -318,7 +317,7 @@ update_ele_past_time_class (earthquake_info_t *ele)
     } else {
         ele->past_time_class = past_time_class5;
     }
-} // end update
+}                       // end update
 
 static void
 update_earthquake_past_time_class (void)
@@ -327,6 +326,7 @@ update_earthquake_past_time_class (void)
 
     for (i = 0; i < earthquake_lst.count; ++i) {
         update_ele_past_time_class (earthquake_lst.item + i);
-    } // end for
-} // end update_earthquake_past_time_class
+    }                   // end for
+}                       // end update_earthquake_past_time_class
+
 /* vim: set sw=4 ts=8 sts=4 expandtab spell : */
