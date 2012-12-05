@@ -1,4 +1,4 @@
---no-blank-lines-after-declarations
+--blank-lines-after-declarations
 --blank-lines-after-procedures
 --break-before-boolean-operator
 --no-blank-lines-after-commas
