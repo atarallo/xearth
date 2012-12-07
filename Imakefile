@@ -12,22 +12,6 @@ XCOMM without fee, provided that both the above copyright notice and
 XCOMM this permission notice appear in all copies and in supporting
 XCOMM documentation.
 XCOMM
-XCOMM Unisys Corporation holds worldwide patent rights on the Lempel
-XCOMM Zev Welch (LZW) compression technique employed in the CompuServe
-XCOMM GIF image file format as well as in other formats. Unisys has
-XCOMM made it clear, however, that it does not require licensing or
-XCOMM fees to be paid for freely distributed, non-commercial
-XCOMM applications (such as xearth) that employ LZW/GIF
-XCOMM technology. Those wishing further information about licensing
-XCOMM the LZW patent should contact Unisys directly at
-XCOMM (lzw_info@unisys.com) or by writing to
-XCOMM
-XCOMM   Unisys Corporation
-XCOMM   Welch Licensing Department
-XCOMM   M/S-C1SW19
-XCOMM   P.O. Box 500
-XCOMM   Blue Bell, PA 19424
-XCOMM
 XCOMM The author makes no representations about the suitability of
 XCOMM this software for any purpose. It is provided "as is" without
 XCOMM express or implied warranty.

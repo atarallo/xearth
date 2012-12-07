@@ -14,21 +14,6 @@
  * permission notice appear in all copies and in supporting
  * documentation.
  *
- * Unisys Corporation holds worldwide patent rights on the Lempel Zev
- * Welch (LZW) compression technique employed in the CompuServe GIF
- * image file format as well as in other formats. Unisys has made it
- * clear, however, that it does not require licensing or fees to be
- * paid for freely distributed, non-commercial applications (such as
- * xearth) that employ LZW/GIF technology. Those wishing further
- * information about licensing the LZW patent should contact Unisys
- * directly at (lzw_info@unisys.com) or by writing to
- *
- *   Unisys Corporation
- *   Welch Licensing Department
- *   M/S-C1SW19
- *   P.O. Box 500
- *   Blue Bell, PA 19424
- *
  * The author makes no representations about the suitability of this
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
