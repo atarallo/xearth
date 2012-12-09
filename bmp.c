@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 static void bmp_setup _P ((void));
 static int bmp_row _P ((u_char *));
@@ -139,6 +138,7 @@ bmp_setup ()
 
     for (i = 0; i < dither_ncolors; i++) {
         struct RGBQUAD rgb;
+
         rgb.rgbBlue = dither_colormap[i * 3 + 2];
         rgb.rgbGreen = dither_colormap[i * 3 + 1];
         rgb.rgbRed = dither_colormap[i * 3 + 0];

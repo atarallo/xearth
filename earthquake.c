@@ -35,12 +35,14 @@ static void test_config_dir (void);
 static void load_earthquake_marker (void);
 
 static time_t pre_dat_file_mtime = 0;
-static time_t cur_dat_file_mtime = 0;
 static time_t last_check_time = 0;
+
+time_t cur_earth_dat_file_mtime = 0;
 
 // the week's data are updated every minute at earthquake.usgs.gov
 // but we only query at most once per 15 minutes
 static time_t earthquake_min_update_intrval = 15 * 60;
+
 /* use wget to retrieve the earthquake information */
 static earthquake_info_t earthquake_items[MAX_EARTHQUAKE_ENTRY];
 
@@ -49,7 +51,7 @@ static earthquake_list_t earthquake_lst = {
     .count = 0,
 };
 
-static void update_ele_past_time_class (earthquake_info_t * ele);
+static void update_ele_past_time_class (earthquake_info_t *ele);
 static void update_earthquake_past_time_class (void);
 
 extern time_t current_time;
@@ -71,15 +73,16 @@ get_earthquake_data (void)
         execlp ("wget", "wget", "-Nq", EARTHQUAKE_INFO_URL, NULL);
     } else if (pid > 0) {       // parent
         int status;
+
         waitpid (pid, &status, 0);
     }                   // end if
     if (stat (EARTHQUAKE_FILE, &file_stat) < 0) {
         // not a fatal error, just continue
         return;
     }                   // end if
-    cur_dat_file_mtime = file_stat.st_mtime;
-    if (cur_dat_file_mtime != pre_dat_file_mtime) {
-        pre_dat_file_mtime = cur_dat_file_mtime;
+    cur_earth_dat_file_mtime = file_stat.st_mtime;
+    if (cur_earth_dat_file_mtime != pre_dat_file_mtime) {
+        pre_dat_file_mtime = cur_earth_dat_file_mtime;
         load_earthquake_marker ();
     } else {
         update_earthquake_past_time_class ();
@@ -181,7 +184,7 @@ get_month (const char *mon)
 #define PAST_2DAYS  (2 * PAST_DAY)
 #define PAST_4DAYS  (4 * PAST_DAY)
 
-static void update_ele_data (earthquake_info_t * ele);
+static void update_ele_data (earthquake_info_t *ele);
 
 static void
 load_earthquake_marker (void)
@@ -248,13 +251,14 @@ load_earthquake_marker (void)
         save_ptr += 5;
         // lat
         token = strtok_r (NULL, ",", &save_ptr);
-        lat = strtod (token, NULL) * (M_PI / 180);
+        lat = strtod (token, NULL) * M_PI / 180;
         earthquake_lst.item[earthquake_lst.count].lat = lat;
 
         // lon
         token = strtok_r (NULL, ",", &save_ptr);
-        lon = strtod (token, NULL) * (M_PI / 180);
+        lon = strtod (token, NULL) * M_PI / 180;
         earthquake_lst.item[earthquake_lst.count].lon = lon;
+
         // magnitude
         token = strtok_r (NULL, ",", &save_ptr);
         mag = strtof (token, NULL);
@@ -273,34 +277,34 @@ load_earthquake_marker (void)
 }                       // end load_earthquake_marker
 
 static void
-update_ele_data (earthquake_info_t * ele)
+update_ele_data (earthquake_info_t *ele)
 {
     // find radius factor
     if (ele->magnitude >= 8.0)
-        ele->radius_factor = 18;
+        ele->radius_factor = radius_factor8;
     else if (ele->magnitude >= 7.0)
-        ele->radius_factor = 12;
+        ele->radius_factor = radius_factor7;
     else if (ele->magnitude >= 6.0)
-        ele->radius_factor = 8;
+        ele->radius_factor = radius_factor6;
     else if (ele->magnitude >= 5.0)
-        ele->radius_factor = 6;
+        ele->radius_factor = radius_factor5;
     else if (ele->magnitude >= 4.0)
-        ele->radius_factor = 4;
+        ele->radius_factor = radius_factor4;
     else if (ele->magnitude >= 3.0)
-        ele->radius_factor = 3;
+        ele->radius_factor = radius_factor3;
     else if (ele->magnitude >= 2.0)
-        ele->radius_factor = 2;
+        ele->radius_factor = radius_factor2;
     else
-        ele->radius_factor = 1;
+        ele->radius_factor = radius_factor1;
 
-    // preculated 3 positions
+    // pe-calculated 3 positions
     ele->pos[0] = sin (ele->lon) * cos (ele->lat);
     ele->pos[1] = sin (ele->lat);
-    ele->pos[2] = cos (ele->lon);
+    ele->pos[2] = cos (ele->lon) * cos (ele->lat);
 }                       // end update_ele_data
 
 static void
-update_ele_past_time_class (earthquake_info_t * ele)
+update_ele_past_time_class (earthquake_info_t *ele)
 {
     double time_diff;
 
@@ -317,7 +321,7 @@ update_ele_past_time_class (earthquake_info_t * ele)
     } else {
         ele->past_time_class = past_time_class5;
     }
-}                       // end update
+}                       // end update_ele_past_time_class
 
 static void
 update_earthquake_past_time_class (void)

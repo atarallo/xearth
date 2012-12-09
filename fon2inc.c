@@ -110,6 +110,7 @@ dofnt (unsigned char *fnt, int fntsize)
         for (j = 0; j < height; j++) {
             for (k = 0; k < widthbytes; k++) {
                 int bytepos = off + k * height + j;
+
                 Chars[i].data[j * widthbytes + k] = fnt[bytepos];
             }
         }
@@ -141,6 +142,7 @@ nefon (unsigned char *fon, int fonsize, int neoff)
         for (i = 0; i < count; i++) {
             int start = fromword (fon, p) << shift;
             int size = fromword (fon, p + 2) << shift;
+
             if (start < 0 || size < 0 || start + size > fonsize) {
                 fprintf (stderr, "Resource overruns file boundaries\n");
                 exit (1);

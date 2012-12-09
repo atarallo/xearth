@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 static void ppm_setup _P ((FILE *));
 static int ppm_row _P ((u_char *));

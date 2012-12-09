@@ -31,7 +31,6 @@
 #ifndef _GIFLIB_H_
 #define _GIFLIB_H_
 
-#include "kljcpyrt.h"
 
 /*
  * giflib return codes
@@ -72,47 +71,47 @@ typedef unsigned char BYTE;
  * procedures exported by gifin.c
  */
 
-extern int gifin_open_file();
-extern int gifin_open_image();
-extern int gifin_get_pixel();
-extern int gifin_get_row();
-extern int gifin_close_image();
-extern int gifin_close_file();
+extern int gifin_open_file ();
+extern int gifin_open_image ();
+extern int gifin_get_pixel ();
+extern int gifin_get_row ();
+extern int gifin_close_image ();
+extern int gifin_close_file ();
 
 /*
  * variables exported by gifin.c
  */
 
-extern int  gifin_rast_width;       /* raster width */
-extern int  gifin_rast_height;      /* raster height */
-extern BYTE gifin_g_cmap_flag;      /* global colormap flag */
-extern int  gifin_g_pixel_bits;     /* bits per pixel, global colormap */
-extern int  gifin_g_ncolors;        /* number of colors, global colormap */
-extern BYTE gifin_g_cmap[3][256];   /* global colormap */
-extern int  gifin_bg_color;         /* background color index */
-extern int  gifin_color_bits;       /* bits of color resolution */
+extern int gifin_rast_width;    /* raster width */
+extern int gifin_rast_height;   /* raster height */
+extern BYTE gifin_g_cmap_flag;  /* global colormap flag */
+extern int gifin_g_pixel_bits;  /* bits per pixel, global colormap */
+extern int gifin_g_ncolors;     /* number of colors, global colormap */
+extern BYTE gifin_g_cmap[3][256];       /* global colormap */
+extern int gifin_bg_color;      /* background color index */
+extern int gifin_color_bits;    /* bits of color resolution */
 
-extern int  gifin_img_left;         /* image position on raster */
-extern int  gifin_img_top;          /* image position on raster */
-extern int  gifin_img_width;        /* image width */
-extern int  gifin_img_height;       /* image height */
-extern BYTE gifin_l_cmap_flag;      /* local colormap flag */
-extern int  gifin_l_pixel_bits;     /* bits per pixel, local colormap */
-extern int  gifin_l_ncolors;        /* number of colors, local colormap */
-extern BYTE gifin_l_cmap[3][256];   /* local colormap */
-extern BYTE gifin_interlace_flag;   /* interlace image format flag */
+extern int gifin_img_left;      /* image position on raster */
+extern int gifin_img_top;       /* image position on raster */
+extern int gifin_img_width;     /* image width */
+extern int gifin_img_height;    /* image height */
+extern BYTE gifin_l_cmap_flag;  /* local colormap flag */
+extern int gifin_l_pixel_bits;  /* bits per pixel, local colormap */
+extern int gifin_l_ncolors;     /* number of colors, local colormap */
+extern BYTE gifin_l_cmap[3][256];       /* local colormap */
+extern BYTE gifin_interlace_flag;       /* interlace image format flag */
 
-#endif /* USING_GIF_IN */
+#endif                          /* USING_GIF_IN */
 
 /*
  * procedures exported by gifout.c
  */
 
-extern int  gifout_open_file _P((FILE *, int, int, int, BYTE [3][256], int));
-extern int  gifout_open_image _P((int, int, int, int));
-extern void gifout_put_pixel _P((int));
-extern void gifout_put_row _P((int *));
-extern int  gifout_close_image _P((void));
-extern int  gifout_close_file _P((void));
+extern int gifout_open_file _P ((FILE *, int, int, int, BYTE[3][256], int));
+extern int gifout_open_image _P ((int, int, int, int));
+extern void gifout_put_pixel _P ((int));
+extern void gifout_put_row _P ((int *));
+extern int gifout_close_image _P ((void));
+extern int gifout_close_file _P ((void));
 
 #endif

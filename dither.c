@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 static void dither_row_ltor _P ((u_char *, u16or32 *));
 static void dither_row_rtol _P ((u_char *, u16or32 *));

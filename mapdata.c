@@ -55,7 +55,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 short map_data[] = {
 

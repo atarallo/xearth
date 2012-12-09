@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 #define MAP_DATA_SCALE (30000)
 

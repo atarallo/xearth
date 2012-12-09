@@ -30,7 +30,6 @@
 
 #include "xearth.h"
 #include "giflib.h"
-#include "kljcpyrt.h"
 
 static void gif_setup _P ((FILE *));
 static int gif_row _P ((u_char *));

@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 #include <gd.h>
 

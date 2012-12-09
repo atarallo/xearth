@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 #define LABEL_LEFT_FLUSH (1<<0)
 #define LABEL_TOP_FLUSH  (1<<1)
@@ -120,6 +119,7 @@ inverse_project (y, x, lat, lon)
     {
         double _p0_, _p1_, _p2_;
         double _c_, _s_, _t_;
+
         _p0_ = q[0];
         _p1_ = q[1];
         _p2_ = q[2];
@@ -721,7 +721,7 @@ new_label ()
 {
     int dy;
     int x, y;
-    int label_orient = LABEL_LEFT_FLUSH | LABEL_TOP_FLUSH;
+    int label_orient = LABEL_LEFT_FLUSH;
     int label_xvalue = 5;
     int label_yvalue = 5;
     int height;

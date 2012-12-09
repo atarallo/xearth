@@ -46,7 +46,6 @@ typedef unsigned short u_short;
 #include <unistd.h>
 #include "port.h"
 #include "extarr.h"
-#include "kljcpyrt.h"
 
 #define VersionString "1.1p1"
 #define HomePageURL   "https://github.com/qunying/xearth.git"
@@ -57,11 +56,11 @@ typedef unsigned short u_short;
 #ifdef NO_RANDOM
 #define random()   lrand48()
 #define srandom(x) srand48((long) (x))
-#endif /* NO_RANDOM */
+#endif                          /* NO_RANDOM */
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
-#endif /* !M_PI */
+#endif                          /* !M_PI */
 
 /* a particularly large number
  */
@@ -81,12 +80,12 @@ typedef unsigned short u_short;
 
 /* types of pixels
  */
-#define PixTypeSpace     (0x80000000) /* black */
-#define PixTypeLand      (0x8100ff00) /* green */
-#define PixTypeWater     (0x820000ff) /* blue  */
-#define PixTypeStar      (0x83ffffff) /* white */
-#define PixTypeGridLand  (0x84ffffff) /* white */
-#define PixTypeGridWater (0x85ffffff) /* white */
+#define PixTypeSpace     (0x80000000)   /* black */
+#define PixTypeLand      (0x8100ff00)   /* green */
+#define PixTypeWater     (0x820000ff)   /* blue  */
+#define PixTypeStar      (0x83ffffff)   /* white */
+#define PixTypeGridLand  (0x84ffffff)   /* white */
+#define PixTypeGridWater (0x85ffffff)   /* white */
 
 #define PixRed(p)   (((p) >> 16) & 0xff)
 #define PixGreen(p) (((p) >>  8) & 0xff)
@@ -186,170 +185,167 @@ typedef unsigned short u_short;
 #define INV_XPROJECT(x) (((x)-proj_info.proj_xofs)*proj_info.inv_proj_scale)
 #define INV_YPROJECT(y) ((proj_info.proj_yofs-(y))*proj_info.inv_proj_scale)
 
-typedef int      s8or32;
+typedef int s8or32;
 typedef unsigned u8or32;
-typedef int      s16or32;
+typedef int s16or32;
 typedef unsigned u16or32;
 
-typedef struct
-{
-  double cos_lat, sin_lat;	/* cos/sin of view_lat */
-  double cos_lon, sin_lon;	/* cos/sin of view_lon */
-  double cos_rot, sin_rot;	/* cos/sin of view_rot */
+typedef struct {
+    double cos_lat, sin_lat;    /* cos/sin of view_lat */
+    double cos_lon, sin_lon;    /* cos/sin of view_lon */
+    double cos_rot, sin_rot;    /* cos/sin of view_rot */
 } ViewPosInfo;
 
-typedef struct
-{
-  double proj_scale;
-  double proj_xofs;
-  double proj_yofs;
-  double inv_proj_scale;
+typedef struct {
+    double proj_scale;
+    double proj_xofs;
+    double proj_yofs;
+    double inv_proj_scale;
 } ProjInfo;
 
-typedef struct
-{
-  short y;
-  short lo_x;
-  short hi_x;
-  short val;
+typedef struct {
+    short y;
+    short lo_x;
+    short hi_x;
+    short val;
 } ScanBit;
 
-typedef struct
-{
-  short  x;
-  short  y;
-  u_char type;
+typedef struct {
+    short x;
+    short y;
+    u_char type;
 } ScanDot;
 
-typedef struct
-{
-  float lat;
-  float lon;
-  char *label;
-  int   align;
+typedef struct {
+    float lat;
+    float lon;
+    char *label;
+    int align;
 } MarkerInfo;
 
 /* bmp.c */
-extern void bmp_output _P((void));
+extern void bmp_output _P ((void));
 
 /* dither.c */
-extern int     dither_ncolors;
+extern int dither_ncolors;
 extern u_char *dither_colormap;
-extern void    dither_setup _P((int));
-extern void    dither_row _P((u_char *, u16or32 *));
-extern void    dither_cleanup _P((void));
-extern void    mono_dither_setup _P((void));
-extern void    mono_dither_row _P((u_char *, u16or32 *));
-extern void    mono_dither_cleanup _P((void));
+extern void dither_setup _P ((int));
+extern void dither_row _P ((u_char *, u16or32 *));
+extern void dither_cleanup _P ((void));
+extern void mono_dither_setup _P ((void));
+extern void mono_dither_row _P ((u_char *, u16or32 *));
+extern void mono_dither_cleanup _P ((void));
 
 /* font.c */
-extern void    font_extent _P((const char *, int *, int *));
-extern void    font_draw _P((int, int, const char *, ExtArr));
+extern void font_extent _P ((const char *, int *, int *));
+extern void font_draw _P ((int, int, const char *, ExtArr));
 
 /* gif.c */
-extern void gif_output _P((void));
+extern void gif_output _P ((void));
 
 /* jpeg.c */
-extern void jpeg_output _P((void));
+extern void jpeg_output _P ((void));
 
 /* mapdata.c */
 extern short map_data[];
 
 /* markers.c */
 extern MarkerInfo *marker_info;
-extern void        load_marker_info _P((char *));
-extern void        show_marker_info _P((char *));
+extern void load_marker_info _P ((char *));
+extern void show_marker_info _P ((char *));
 
 /* overlay.c */
-extern void overlay_init _P((void));
-extern int overlay_pixel _P((double, double));
-extern int cloud_pixel _P((double, double, int));
-extern void overlay_close _P((void));
+extern void overlay_init _P ((void));
+extern int overlay_pixel _P ((double, double));
+extern int cloud_pixel _P ((double, double, int));
+extern void overlay_close _P ((void));
 
 /* png.c */
-extern void png_output _P((void));
+extern void png_output _P ((void));
 
 /* ppm.c */
-extern void ppm_output _P((void));
+extern void ppm_output _P ((void));
 
 /* render.c */
-extern void render _P((int (*)(u_char *)));
-extern void do_dots _P((void));
+extern void render _P ((int (*)(u_char *)));
+extern void do_dots _P ((void));
 
 /* resources.c */
-extern char        *get_string_resource _P((const char *, const char *));
-extern int          get_boolean_resource _P((const char *, const char *));
-extern int          get_integer_resource _P((const char *, const char *));
-extern double       get_float_resource _P((const char *, const char *));
-extern unsigned int get_pixel_resource _P((const char *, const char *));
+extern char *get_string_resource _P ((const char *, const char *));
+extern int get_boolean_resource _P ((const char *, const char *));
+extern int get_integer_resource _P ((const char *, const char *));
+extern double get_float_resource _P ((const char *, const char *));
+extern unsigned int get_pixel_resource _P ((const char *, const char *));
 
 /* scan.c */
 extern ViewPosInfo view_pos_info;
-extern ProjInfo    proj_info;
-extern ExtArr      scanbits;
-extern void        scan_map _P((void));
+extern ProjInfo proj_info;
+extern ExtArr scanbits;
+extern void scan_map _P ((void));
 
 /* sunpos.c */
-extern void   sun_position _P((time_t, double *, double *));
-extern void   moon_position _P((time_t, double *, double *));
+extern void sun_position _P ((time_t, double *, double *));
+extern void moon_position _P ((time_t, double *, double *));
 
 /* x11.c */
-extern void command_line_x _P((int, char *[]));
-extern void x11_output _P((void));
+extern void command_line_x _P ((int, char *[]));
+extern void x11_output _P ((void));
 
 /* xearth.c */
-extern char  *progname;
-extern int    proj_type;
+extern char *progname;
+extern int proj_type;
 extern double view_lon;
 extern double view_lat;
 extern double view_rot;
 extern double view_mag;
-extern int    do_shade;
+extern int do_shade;
 extern double sun_lon;
 extern double sun_lat;
-extern int    wdth;
-extern int    hght;
-extern int    shift_x;
-extern int    shift_y;
-extern int    do_stars;
+extern int wdth;
+extern int hght;
+extern int shift_x;
+extern int shift_y;
+extern int do_stars;
 extern double star_freq;
-extern int    big_stars;
-extern int    do_grid;
-extern int    grid_big;
-extern int    grid_small;
-extern int    do_label;
-extern int    do_markers;
-extern char  *markerfile;
-extern char  *overlayfile;
-extern char  *cloudfile;
-extern int    wait_time;
+extern int big_stars;
+extern int do_grid;
+extern int grid_big;
+extern int grid_small;
+extern int do_label;
+extern int do_markers;
+extern char *markerfile;
+extern char *overlayfile;
+extern char *cloudfile;
+extern int wait_time;
 extern double time_warp;
-extern int    fixed_time;
-extern int    day;
-extern int    night;
-extern int    terminator;
+extern int fixed_time;
+extern int day;
+extern int night;
+extern int terminator;
 extern double xgamma;
-extern int    use_two_pixmaps;
-extern int    num_colors;
-extern int    do_fork;
-extern int    priority;
+extern int use_two_pixmaps;
+extern int num_colors;
+extern int do_fork;
+extern int priority;
 extern time_t current_time;
-extern int    earthquake_info;
+extern int earthquake_info;
 
-extern void   compute_positions _P((void));
-extern char **tokenize _P((char *, int *, const char **));
-extern void   decode_proj_type _P((char *));
-extern void   decode_rotation _P((char *));
-extern void   decode_viewing_pos _P((char *));
-extern void   decode_sun_pos _P((char *));
-extern void   decode_size _P((char *));
-extern void   decode_shift _P((char *));
-extern void   decode_colors _P((char *));
-extern void   xearth_bzero _P((char *, unsigned));
-extern void   version_info _P((int));
-extern void   usage _P((const char *)) _noreturn;
-extern void   warning _P((const char *));
-extern void   fatal _P((const char *)) _noreturn;
+extern void compute_positions _P ((void));
+extern char **tokenize _P ((char *, int *, const char **));
+extern void decode_proj_type _P ((char *));
+extern void decode_rotation _P ((char *));
+extern void decode_viewing_pos _P ((char *));
+extern void decode_sun_pos _P ((char *));
+extern void decode_size _P ((char *));
+extern void decode_shift _P ((char *));
+extern void decode_colors _P ((char *));
+extern void xearth_bzero _P ((char *, unsigned));
+extern void version_info _P ((int));
+// *INDENT-OFF*
+extern void usage _P ((const char *)) _noreturn;
+extern void warning _P ((const char *));
+extern void fatal _P ((const char *)) _noreturn;
+// *INDENT-ON*
 
 #ifdef USE_EXACT_SQRT
 
@@ -369,7 +365,7 @@ extern void   fatal _P((const char *)) _noreturn;
       ? ((((-9.637346154*(x))+3.56143)*(x))+0.065372935)    \
       : (0.0)))
 
-#endif /* USE_EXACT_SQRT */
+#endif                          /* USE_EXACT_SQRT */
 
 #ifndef isupper
 # define isupper(c)  ((c) >= 'A' && (c) <= 'Z')

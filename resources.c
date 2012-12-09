@@ -56,6 +56,7 @@ get_string_resource (res_name, res_class)
     XrmValue value;
     char *type;
     char full_name[1024], full_class[1024];
+
     strcpy (full_name, progname);
     strcat (full_name, ".");
     strcat (full_name, res_name);
@@ -64,6 +65,7 @@ get_string_resource (res_name, res_class)
     strcat (full_class, res_class);
     if (XrmGetResource (db, full_name, full_class, &type, &value)) {
         char *str = (char *) malloc ((unsigned) value.size + 1);
+
         strncpy (str, (char *) value.addr, value.size);
         str[value.size] = 0;
         return str;
@@ -78,6 +80,7 @@ get_boolean_resource (res_name, res_class)
     char *tmp, buf[100];
     char *s = get_string_resource (res_name, res_class);
     char *os = s;
+
     if (!s)
         return 0;
     for (tmp = buf; *s; s++)
@@ -100,6 +103,7 @@ get_integer_resource (res_name, res_class)
 {
     int val;
     char c, *s = get_string_resource (res_name, res_class);
+
     if (!s)
         return 0;
     if (1 == sscanf (s, " %d %c", &val, &c)) {
@@ -118,6 +122,7 @@ get_float_resource (res_name, res_class)
 {
     double val;
     char c, *s = get_string_resource (res_name, res_class);
+
     if (!s)
         return 0.0;
     if (1 == sscanf (s, " %lf %c", &val, &c)) {
@@ -138,6 +143,7 @@ get_pixel_resource (res_name, res_class, dpy, cmap)
 {
     XColor color;
     char *s = get_string_resource (res_name, res_class);
+
     if (!s)
         goto DEFAULT;
 
@@ -166,6 +172,7 @@ parse_time (string, seconds_default_p, silent_p)
 {
     unsigned int h, m, s;
     char c;
+
     if (3 == sscanf (string, " %u : %2u : %2u %c", &h, &m, &s, &c)) ;
     else if (2 == sscanf (string, " : %2u : %2u %c", &m, &s, &c) ||
              2 == sscanf (string, " %u : %2u %c", &m, &s, &c))
@@ -207,6 +214,7 @@ get_time_resource (res_name, res_class, sec_p)
 {
     int val;
     char *s = get_string_resource (res_name, res_class);
+
     if (!s)
         return 0;
     val = parse_time (s, sec_p, False);

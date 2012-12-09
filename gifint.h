@@ -32,20 +32,19 @@
 #define _GIFINT_H_
 
 #include "giflib.h"
-#include "kljcpyrt.h"
 
 #define GIF_SIG      "GIF87a"
-#define GIF_SIG_LEN  ((unsigned) 6) /* GIF signature length */
-#define GIF_SD_SIZE  ((unsigned) 7) /* GIF screen descriptor size */
-#define GIF_ID_SIZE  ((unsigned) 9) /* GIF image descriptor size */
+#define GIF_SIG_LEN  ((unsigned) 6)     /* GIF signature length */
+#define GIF_SD_SIZE  ((unsigned) 7)     /* GIF screen descriptor size */
+#define GIF_ID_SIZE  ((unsigned) 9)     /* GIF image descriptor size */
 
 #define GIF_SEPARATOR   ','     /* GIF image separator */
 #define GIF_EXTENSION   '!'     /* GIF extension block marker */
 #define GIF_TERMINATOR  ';'     /* GIF terminator */
 
-#define STAB_SIZE  4096         /* string table size */
-#define PSTK_SIZE  4096         /* pixel stack size */
+#define STAB_SIZE  4096 /* string table size */
+#define PSTK_SIZE  4096 /* pixel stack size */
 
-#define NULL_CODE  -1           /* string table null code */
+#define NULL_CODE  -1   /* string table null code */
 
 #endif

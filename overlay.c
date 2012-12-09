@@ -136,8 +136,10 @@ cloud_pixel (double lat, double lon, int p)
         int r = PixRed (p);
         int g = PixGreen (p);
         int b = PixBlue (p);
+
         if (clouds_alpha) {
             int a = gdImageAlpha (clouds, c);
+
             return PixRGB (a * r / 127 +
                            (127 - a) * gdImageRed (clouds, c) / 127,
                            a * g / 127 + (127 - a) * gdImageGreen (clouds,

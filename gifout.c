@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include "port.h"
 #include "gifint.h"
-#include "kljcpyrt.h"
 
 /****
  **

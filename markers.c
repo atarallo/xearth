@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 #define BuiltInName "built-in"
 #define MaxLineLen  (1024)

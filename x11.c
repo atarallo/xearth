@@ -34,7 +34,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xproto.h>
 #include <signal.h>
-#include "kljcpyrt.h"
 #include "earthquake.h"
 
 #define RETAIN_PROP_NAME "_XSETROOT_ID"
@@ -86,7 +85,11 @@ static void updateProperty _P ((Display *, Window, const char *, Atom,
 static void preserveResource _P ((Display *, Window));
 static void freePrevious _P ((Display *, Window));
 static int xkill_handler _P ((Display *, XErrorEvent *));
-static void draw_earthquake_location (Display * dpy, earthquake_list_t * list);
+static void draw_earthquake_location (Display *dpy, earthquake_list_t *list);
+static void draw_earthquake_mark (Display *dpy, int radius, int x, int y,
+                                  Pixel fill_color);
+static void draw_earthquake_legend (Display *dpy, int y);
+
 static int bpp;
 static u16or32 *dith;
 static u_char *xbuf;
@@ -132,7 +135,8 @@ static int label_xvalue;        /* label x position    */
 static int label_yvalue;        /* label y position    */
 static int label_orient;        /* label orientation   */
 
-static Pixel get_color (Display * dpy, char *color_name);
+static Pixel get_color (Display *dpy, char *color_name);
+
 /* earthquake color */
 static char *past_time_color_name[NUM_PAST_TIME_CLASS];
 
@@ -1215,8 +1219,17 @@ draw_label (dpy)
 #else
         y -= 2 * dy;    /* 3 lines of text */
 #endif
+        // include earthquake legend and update time
+        if (earthquake_info) {
+            y -= dy + radius_unit * radius_factor8 * 2 + 1;
+        }
     }
 
+    if (earthquake_info) {
+        // draw the earthquake legend first
+        draw_earthquake_legend (dpy, y);
+        y += radius_unit * radius_factor8 * 2 + dy + 1;
+    }                   // end if
 #ifdef DEBUG
     frame += 1;
     sprintf (buf, "frame %d", frame);
@@ -1238,6 +1251,7 @@ draw_label (dpy)
         x = label_xvalue - extents.lbearing;
     else
         x = (wdth + label_xvalue) - extents.rbearing;
+
     draw_outlined_string (dpy, work_pix, white, black, x, y, buf, len);
     y += dy;
 
@@ -1540,7 +1554,7 @@ xkill_handler (dpy, xev)
 }
 
 static Pixel
-get_color (Display * dpy, char *color_name)
+get_color (Display *dpy, char *color_name)
 {
     XColor near_color, true_color;
 
@@ -1549,7 +1563,7 @@ get_color (Display * dpy, char *color_name)
 }                       // end get_color;
 
 static void
-draw_earthquake_location (Display * dpy, earthquake_list_t * list)
+draw_earthquake_location (Display *dpy, earthquake_list_t *list)
 {
     int x, y;
     double pos[3];
@@ -1586,14 +1600,101 @@ draw_earthquake_location (Display * dpy, earthquake_list_t * list)
         // calcule the radius to draw
         radius = radius_unit * list->item[i].radius_factor;
 
-        // fill a circle
-        XSetForeground (dpy, gc, fill_color);
-        XFillArc (dpy, work_pix, gc, x - radius, y - radius,
-                  radius * 2, radius * 2, 0, 360 * 64);
-        // then draw a border
-        XSetForeground (dpy, gc, black);
-        XDrawArc (dpy, work_pix, gc, x - radius, y - radius,
-                  radius * 2, radius * 2, 0, 360 * 64);
-        XSetForeground (dpy, gc, white);
+        draw_earthquake_mark (dpy, radius, x - radius, y - radius, fill_color);
     }                   // end for
 }                       // end draw_earthquake_location
+
+static void
+draw_earthquake_mark (Display *dpy, int radius, int x, int y, Pixel fill_color)
+{
+    // fill a circle
+    XSetForeground (dpy, gc, fill_color);
+    XFillArc (dpy, work_pix, gc, x, y, radius * 2, radius * 2, 0, 360 * 64);
+    if (radius > 1) {
+        // then draw a border
+        XSetForeground (dpy, gc, black);
+        XDrawArc (dpy, work_pix, gc, x, y, radius * 2, radius * 2, 0,
+                  360 * 64);
+    }                   // end if
+    XSetForeground (dpy, gc, white);
+}                       // end draw_earthquake_mark
+
+static void
+draw_earthquake_legend (Display *dpy, int y)
+{
+    int x;
+    int radius;
+    char buf[128];
+    int len;
+    int direction;
+    int ascent;
+    int descent;
+    XCharStruct extents;
+    int dy;
+
+    dy = font->ascent + font->descent + 1;
+    Pixel fill_color = past_time_color[past_time_class1];
+
+    if (label_orient & LABEL_LEFT_FLUSH)
+        x = label_xvalue + 5;
+    else
+        x = (wdth + label_xvalue * 2) - radius_unit * radius_factor8 * 7 / 2;
+
+    radius = radius_unit * radius_factor8;
+    y -= dy - 1;
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor8 - radius_factor7) * 2;
+    radius = radius_unit * radius_factor7;
+    fill_color = past_time_color[past_time_class2];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor7 - radius_factor6) * 2;
+    radius = radius_unit * radius_factor6;
+    fill_color = past_time_color[past_time_class3];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor6 - radius_factor5) * 2;
+    radius = radius_unit * radius_factor5;
+    fill_color = past_time_color[past_time_class4];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor5 - radius_factor4) * 2;
+    radius = radius_unit * radius_factor4;
+    fill_color = past_time_color[past_time_class5];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor4 - radius_factor3) * 2;
+    radius = radius_unit * radius_factor3;
+    fill_color = past_time_color[past_time_class5];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor3 - radius_factor2) * 2;
+    radius = radius_unit * radius_factor2;
+    fill_color = past_time_color[past_time_class5];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    x += radius_unit * radius_factor8 / 2;
+    y += radius_unit * (radius_factor2 - radius_factor1) * 2;
+    radius = radius_unit * radius_factor1;
+    fill_color = past_time_color[past_time_class5];
+    draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
+
+    y += radius + 1 + dy;
+    strftime (buf, sizeof (buf), "quake %d %b %y %H:%M %Z",
+              localtime (&cur_earth_dat_file_mtime));
+    len = strlen (buf);
+    XTextExtents (font, buf, len, &direction, &ascent, &descent, &extents);
+    if (label_orient & LABEL_LEFT_FLUSH)
+        x = label_xvalue - extents.lbearing;
+    else
+        x = (wdth + label_xvalue) - extents.rbearing;
+    draw_outlined_string (dpy, work_pix, white, black, x, y, buf, len);
+
+}                       // end draw_earthquake_legend

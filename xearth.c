@@ -29,7 +29,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 extern int errno;
 
 #ifndef NO_SETPRIORITY

@@ -35,3 +35,6 @@
 --procnames-start-lines
 --swallow-optional-blank-lines
 --space-special-semicolon
+-TDisplay
+-Tearthquake_list_t
+-Tearthquake_info_t

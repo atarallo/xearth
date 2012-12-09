@@ -36,7 +36,6 @@
  */
 
 #include "xearth.h"
-#include "kljcpyrt.h"
 
 #define TWOPI         (2*M_PI)
 #define DegsToRads(x) ((x)*(TWOPI/360))

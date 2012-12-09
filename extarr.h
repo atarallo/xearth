@@ -31,16 +31,15 @@
 #ifndef _EXTARR_H_
 #define _EXTARR_H_
 
-typedef struct extarr
-{
-  unsigned eltsize;
-  unsigned limit;
-  unsigned count;
-  void    *body;
+typedef struct extarr {
+    unsigned eltsize;
+    unsigned limit;
+    unsigned count;
+    void *body;
 } *ExtArr;
 
-extern ExtArr extarr_alloc _P((unsigned));
-extern void   extarr_free _P((ExtArr));
-extern void  *extarr_next _P((ExtArr));
+extern ExtArr extarr_alloc _P ((unsigned));
+extern void extarr_free _P ((ExtArr));
+extern void *extarr_next _P ((ExtArr));
 
 #endif
