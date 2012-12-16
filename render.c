@@ -29,6 +29,7 @@
  */
 
 #include "xearth.h"
+#include "output_mode.h"
 
 #define LABEL_LEFT_FLUSH (1<<0)
 #define LABEL_TOP_FLUSH  (1<<1)
@@ -587,7 +588,7 @@ do_dots ()
         new_stars (star_freq);
     if (do_grid)
         new_grid (grid_big, grid_small);
-    if (do_label)
+    if (output_mode != ModeX && do_label)
         new_label ();
 
     qsort (dots->body, dots->count, sizeof (ScanDot), dot_comp);

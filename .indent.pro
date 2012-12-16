@@ -21,8 +21,9 @@
 --dont-format-comments
 --honour-newlines
 --indent-level4
+--indent-label0
 --parameter-indentation4
---line-length79
+--line-length80
 --continue-at-parentheses
 --dont-break-procedure-type
 --dont-star-comments

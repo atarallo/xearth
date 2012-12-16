@@ -29,6 +29,7 @@
  */
 
 #include "xearth.h"
+#include "output_mode.h"
 extern int errno;
 
 #ifndef NO_SETPRIORITY
@@ -37,14 +38,6 @@ extern int errno;
  */
 #include <sys/resource.h>       /* for setpriority() */
 #endif
-
-#define ModeX    (0)    /* possible output_mode values */
-#define ModePPM  (1)
-#define ModeGIF  (2)
-#define ModePNG  (3)
-#define ModeJPEG (4)
-#define ModeBMP  (5)
-#define ModeTest (6)
 
 /* tokens in specifiers are delimited by spaces, tabs, commas, and
  * forward slashes
