@@ -1,6 +1,7 @@
 /* define earthquake plot for xearth
  * It is assumed that ~/.config directory always exist */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -118,67 +119,6 @@ test_config_dir (void)
     }                   // end if
 }                       // end test_config_dir
 
-static int
-get_week_of_day (const char *day)
-{
-    switch (day[0]) {
-    case 'F':          // Friday
-        return 5;
-    case 'M':          // Monday
-        return 1;
-    case 'T':
-        if (day[1] == 'u')      // Tuesday
-            return 2;
-        else            // Thursday
-            return 4;
-    case 'W':          // Wednesday
-        return 3;
-    case 'S':
-        if (day[1] == 'u')      // Sunday
-            return 0;
-        else            // Saturday
-            return 6;
-    default:
-        return 0;
-    }                   // end switch
-}                       // end get_week_of_day
-
-static int
-get_month (const char *mon)
-{
-    switch (mon[0]) {
-    case 'J':
-        if (mon[1] == 'a')      // January
-            return 0;
-        if (mon[2] == 'n')      // June
-            return 5;
-        // July
-        return 6;
-    case 'F':          // February
-        return 1;
-    case 'M':
-        if (mon[2] == 'r')      // March
-            return 2;
-        else            // May
-            return 4;
-    case 'A':
-        if (mon[1] == 'p')      // April
-            return 3;
-        else            // August
-            return 7;
-    case 'S':          // September
-        return 8;
-    case 'O':          // October
-        return 9;
-    case 'N':          // November
-        return 10;
-    case 'D':          // December
-        return 11;
-    default:
-        return 0;
-    }                   // end switch
-}                       // end get_month
-
 #define PAST_2HRS   (2 * 60 * 60)
 #define PAST_DAY    (12 * PAST_2HRS)
 #define PAST_2DAYS  (2 * PAST_DAY)
@@ -209,46 +149,15 @@ load_earthquake_marker (void)
     printf ("Loading earthquake data file ...\n");
     while (earthquake_lst.count < MAX_EARTHQUAKE_ENTRY
            && fgets (buf, sizeof (buf), fp)) {
-        // skip src
-        token = strtok_r (buf, ",", &save_ptr);
-        // skip EqID
-        token = strtok_r (NULL, ",", &save_ptr);
-        // skip Version
-        token = strtok_r (NULL, ",", &save_ptr);
         // Datetime
-        ++save_ptr;     // skip the opening "
-        token = save_ptr;
+        token = strtok_r (buf, ",", &save_ptr);
         memset (&tm, 0, sizeof (tm));
-        // day
-        token = strtok_r (NULL, ",", &save_ptr);
-        tm.tm_wday = get_week_of_day (token);
-        // month
-        ++save_ptr;     // skip the first white space
-        token = strtok_r (NULL, " ", &save_ptr);
-        tm.tm_mon = get_month (token);
-        // day
-        token = strtok_r (NULL, ",", &save_ptr);
-        tm.tm_mday = strtol (token, NULL, 10);
-        // year
-        ++save_ptr;
-        token = strtok_r (NULL, " ", &save_ptr);
-        tm.tm_year = strtol (token, NULL, 10) - 1900;
-        // hour
-        token = strtok_r (NULL, ":", &save_ptr);
-        tm.tm_hour = strtol (token, NULL, 10);
-        // min
-        token = strtok_r (NULL, ":", &save_ptr);
-        tm.tm_min = strtol (token, NULL, 10);
-        // seconds
-        token = strtok_r (NULL, " ", &save_ptr);
-        tm.tm_sec = strtol (token, NULL, 10);
+        strptime (token, "%Y-%m-%dT%H:%M:%S", &tm);
 
         earthquake_lst.item[earthquake_lst.count].time = timegm (&tm);
         update_ele_past_time_class (earthquake_lst.item +
                                     earthquake_lst.count);
 
-        // skip to next token start
-        save_ptr += 5;
         // lat
         token = strtok_r (NULL, ",", &save_ptr);
         lat = strtod (token, NULL) * M_PI / 180;
@@ -259,17 +168,18 @@ load_earthquake_marker (void)
         lon = strtod (token, NULL) * M_PI / 180;
         earthquake_lst.item[earthquake_lst.count].lon = lon;
 
+        // depth
+        token = strtok_r (NULL, ",", &save_ptr);
+#if 0
+        earthquake_list[earthquake_count].depth = strtof (token, NULL);
+#endif
         // magnitude
         token = strtok_r (NULL, ",", &save_ptr);
         mag = strtof (token, NULL);
         earthquake_lst.item[earthquake_lst.count].magnitude = mag;
 
         update_ele_data (earthquake_lst.item + earthquake_lst.count);
-#if 0
-        // depth
-        token = strtok_r (NULL, ",", &save_ptr);
-        earthquake_list[earthquake_count].depth = strtof (token, NULL);
-#endif
+
         ++earthquake_lst.count;
     }                   // end while
     fclose (fp);
