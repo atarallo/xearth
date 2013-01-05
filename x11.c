@@ -1243,7 +1243,7 @@ draw_label (dpy)
     y += dy;
 #endif                          /* DEBUG */
 
-    strftime (buf, sizeof (buf), "%d %b %Y %H:%M %Z",
+    strftime (buf, sizeof (buf), "%Y-%m-%d %H:%M %Z",
               localtime (&current_time));
     len = strlen (buf);
     XTextExtents (font, buf, len, &direction, &ascent, &descent, &extents);
@@ -1687,7 +1687,7 @@ draw_earthquake_legend (Display *dpy, int y)
     draw_earthquake_mark (dpy, radius, x - radius, y, fill_color);
 
     y += radius + 1 + dy;
-    strftime (buf, sizeof (buf), "quake %d %b %Y %H:%M %Z",
+    strftime (buf, sizeof (buf), "quake %Y-%m-%d %H:%M %Z",
               localtime (&cur_earth_dat_file_mtime));
     len = strlen (buf);
     XTextExtents (font, buf, len, &direction, &ascent, &descent, &extents);
