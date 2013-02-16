@@ -135,11 +135,14 @@ next_token (char *buf, int deliminator, char **save_ptr)
     char *chr;
     char *token;
 
-    if (buf && buf[0])
+    if (buf)
         token = buf;
     else if (*save_ptr)
         token = *save_ptr;
     else
+        return NULL;
+
+    if (token[0] == 0)
         return NULL;
 
     chr = strchr (token, deliminator);
