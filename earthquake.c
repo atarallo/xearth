@@ -126,6 +126,32 @@ test_config_dir (void)
 
 static void update_ele_data (earthquake_info_t *ele);
 
+// almost the same as strtok_r, but only check for a single deliminator and
+// if a sequence of two or more contiguous delimiter bytes, will return two
+// or more empty token accordingly
+static char *
+next_token (char *buf, int deliminator, char **save_ptr)
+{
+    char *chr;
+    char *token;
+
+    if (buf && buf[0])
+        token = buf;
+    else if (*save_ptr)
+        token = *save_ptr;
+    else
+        return NULL;
+
+    chr = strchr (token, deliminator);
+    if (chr == NULL) {
+        *save_ptr = NULL;
+    } else {
+        *save_ptr = chr + 1;
+        *chr = 0;
+    } // end if
+    return token;
+} // end next_token
+
 static void
 load_earthquake_marker (void)
 {
@@ -150,7 +176,7 @@ load_earthquake_marker (void)
     while (earthquake_lst.count < MAX_EARTHQUAKE_ENTRY
            && fgets (buf, sizeof (buf), fp)) {
         // Datetime
-        token = strtok_r (buf, ",", &save_ptr);
+        token = next_token (buf, ',', &save_ptr);
         memset (&tm, 0, sizeof (tm));
         strptime (token, "%Y-%m-%dT%H:%M:%S", &tm);
 
@@ -159,22 +185,22 @@ load_earthquake_marker (void)
                                     earthquake_lst.count);
 
         // lat
-        token = strtok_r (NULL, ",", &save_ptr);
+        token = next_token (NULL, ',', &save_ptr);
         lat = strtod (token, NULL) * M_PI / 180;
         earthquake_lst.item[earthquake_lst.count].lat = lat;
 
         // lon
-        token = strtok_r (NULL, ",", &save_ptr);
+        token = next_token (NULL, ',', &save_ptr);
         lon = strtod (token, NULL) * M_PI / 180;
         earthquake_lst.item[earthquake_lst.count].lon = lon;
 
         // depth
-        token = strtok_r (NULL, ",", &save_ptr);
+        token = next_token (NULL, ',', &save_ptr);
 #if 0
         earthquake_list[earthquake_count].depth = strtof (token, NULL);
 #endif
         // magnitude
-        token = strtok_r (NULL, ",", &save_ptr);
+        token = next_token (NULL, ',', &save_ptr);
         mag = strtof (token, NULL);
         earthquake_lst.item[earthquake_lst.count].magnitude = mag;
 
