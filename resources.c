@@ -157,7 +157,7 @@ get_pixel_resource (res_name, res_class, dpy, cmap)
     }
     free (s);
     return color.pixel;
-  DEFAULT:
+DEFAULT:
     if (s)
         free (s);
     return (strcmp (res_class, "Background")

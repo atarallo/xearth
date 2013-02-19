@@ -31,7 +31,6 @@
 #ifndef _GIFLIB_H_
 #define _GIFLIB_H_
 
-
 /*
  * giflib return codes
  */

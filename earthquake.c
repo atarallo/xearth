@@ -151,9 +151,9 @@ next_token (char *buf, int deliminator, char **save_ptr)
     } else {
         *save_ptr = chr + 1;
         *chr = 0;
-    } // end if
+    }                   // end if
     return token;
-} // end next_token
+}                       // end next_token
 
 static void
 load_earthquake_marker (void)

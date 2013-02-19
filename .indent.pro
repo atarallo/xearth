@@ -23,7 +23,7 @@
 --indent-level4
 --indent-label0
 --parameter-indentation4
---line-length80
+--line-length79
 --continue-at-parentheses
 --dont-break-procedure-type
 --dont-star-comments
