@@ -1,0 +1,7 @@
+Version|101|
+AppName|xearth-wrapper|
+AppPath|/mnt/sdcard/bin/|
+AppIconFile|xearth.bmp|
+AppMainTitle|xearth|
+AppPort|2001|
+COMMAND|CMD|Start|xearth.bmp|xearth|

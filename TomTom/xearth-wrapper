@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Wrapper script for xearth (c) Markus Hoffmann 2008-2011
+# Change these values if you like
+
+#first do some settings like the PWD, HOME and PATH
+cd /mnt/sdcard
+
+export PATH=$PATH:/mnt/sdcard/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/sdcard/lib
+export HOME=/mnt/sdcard/
+export TERMINFO=/mnt/sdcard/lib/terminfo
+export TERMCAP=/mnt/sdcard/lib/termcap
+
+
+# now start the console application
+
+TTconsole --login /mnt/sdcard/bin/xearth $1 $2 $3 $4 $5
