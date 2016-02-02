@@ -26,7 +26,7 @@ BINDIST= README.TomTom RELEASE_NOTES xearth xearth.bmp xearth.cap xearth-wrapper
 all:	$(PROG)
 
 $(PROG):	$(SRCS)
-	$(CC)  -o $(PROG) $(LDFLAGS) $(SRCS) $(LIBS)
+	$(CC) -DFRAMEBUFFER -o $(PROG) $(LDFLAGS) $(SRCS) $(LIBS)
 
 clean:
 	/bin/rm -f $(PROG) $(OBJS)
