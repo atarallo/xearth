@@ -18,18 +18,31 @@
  * provided "as is" without express or implied warranty.
  */
 
+
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#ifndef FRAMEBUFFER
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
+#else
+#include "framebuffer.h"
+#define Bool int
+#define False 0
+#define True (!False)
+#endif
 #include "port.h"
+
 
 /* Resource functions.  Assumes: */
 
 extern char *progname;
 extern char *progclass;
+#ifndef FRAMEBUFFER
 extern XrmDatabase db;
+#endif
 
 #ifndef isupper
 # define isupper(c)  ((c) >= 'A' && (c) <= 'Z')
@@ -42,8 +55,10 @@ char               *get_string_resource _P((const char *, const char *));
 int                 get_boolean_resource _P((const char *, const char *));
 int                 get_integer_resource _P((const char *, const char *));
 double              get_float_resource _P((const char *, const char *));
+#ifndef FRAMEBUFFER
 unsigned int        get_pixel_resource _P((const char *, const char *,
                       Display *, Colormap));
+#endif
 int                 parse_time _P((const char *, int, int));
 static unsigned int get_time_resource _P((const char *, const char *, int));
 unsigned int        get_seconds_resource _P((const char *, const char *));
@@ -53,7 +68,9 @@ char *
 get_string_resource (res_name, res_class)
      const char *res_name, *res_class;
 {
+#ifndef FRAMEBUFFER
   XrmValue value;
+#endif
   char	*type;
   char full_name [1024], full_class [1024];
   strcpy (full_name, progname);
@@ -64,10 +81,12 @@ get_string_resource (res_name, res_class)
   strcat (full_class, res_class);
   if (XrmGetResource (db, full_name, full_class, &type, &value))
     {
+#ifndef FRAMEBUFFER
       char *str = (char *) malloc ((unsigned) value.size + 1);
       strncpy (str, (char *) value.addr, value.size);
       str [value.size] = 0;
       return str;
+#endif
     }
   return 0;
 }
@@ -118,7 +137,7 @@ get_float_resource (res_name, res_class)
 {
   double val;
   char c, *s = get_string_resource (res_name, res_class);
-  if (! s) return 0.0;
+  if (! s) return 1.0;
   if (1 == sscanf (s, " %lf %c", &val, &c))
     {
       free (s);
@@ -130,8 +149,11 @@ get_float_resource (res_name, res_class)
   return 0.0;
 }
 
-
+#ifdef FRAMEBUFFER
 unsigned int
+get_pixel_resource (const char *res_name, const char *res_class, void *dpy, int cmap) {
+return(4711);
+#else
 get_pixel_resource (res_name, res_class, dpy, cmap)
      const char *res_name, *res_class;
      Display *dpy;
@@ -158,6 +180,7 @@ get_pixel_resource (res_name, res_class, dpy, cmap)
   return (strcmp (res_class, "Background")
 	  ? WhitePixel (dpy, DefaultScreen (dpy))
 	  : BlackPixel (dpy, DefaultScreen (dpy)));
+#endif
 }
 
 

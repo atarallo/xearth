@@ -15,21 +15,6 @@
  * permission notice appear in all copies and in supporting
  * documentation.
  *
- * Unisys Corporation holds worldwide patent rights on the Lempel Zev
- * Welch (LZW) compression technique employed in the CompuServe GIF
- * image file format as well as in other formats. Unisys has made it
- * clear, however, that it does not require licensing or fees to be
- * paid for freely distributed, non-commercial applications (such as
- * xearth) that employ LZW/GIF technology. Those wishing further
- * information about licensing the LZW patent should contact Unisys
- * directly at (lzw_info@unisys.com) or by writing to
- *
- *   Unisys Corporation
- *   Welch Licensing Department
- *   M/S-C1SW19
- *   P.O. Box 500
- *   Blue Bell, PA 19424
- *
  * The author makes no representations about the suitability of this
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
@@ -45,6 +30,11 @@
 
 #include "xearth.h"
 #include "kljcpyrt.h"
+#ifdef FRAMEBUFFER
+#include <linux/fb.h>
+#include "framebuffer.h"
+extern struct fb_var_screeninfo vinfo;
+#endif
 extern int errno;
 
 #ifndef NO_SETPRIORITY
@@ -127,12 +117,19 @@ int main(argc, argv)
      int   argc;
      char *argv[];
 {
+#ifdef FRAMEBUFFER
+     FbRender_Open();
+#endif
   set_defaults();
 
+#ifdef FRAMEBUFFER
+  command_line(argc, argv);
+#else
   if (using_x(argc, argv))
     command_line_x(argc, argv);
   else
     command_line(argc, argv);
+#endif
 
   if (priority != 0)
     set_priority(priority);
@@ -140,7 +137,9 @@ int main(argc, argv)
   srandom(((int) time(NULL)) + ((int) getpid()));
 
   output();
-
+#ifdef FRAMEBUFFER
+  FbRender_Close();
+#endif
   return 0;
 }
 
@@ -449,8 +448,13 @@ void set_defaults()
   compute_sun_pos  = 1;
   view_rot         = 0;
   rotate_type      = ViewRotNorth;
+#ifdef FRAMEBUFFER
+  wdth             = ScreenWidth;
+  hght             = ScreenHeight;
+#else
   wdth             = DefaultWdthHght;
   hght             = DefaultWdthHght;
+#endif
   shift_x          = 0;
   shift_y          = 0;
   view_mag         = 1.0;

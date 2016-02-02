@@ -15,20 +15,6 @@
  * permission notice appear in all copies and in supporting
  * documentation.
  *
- * Unisys Corporation holds worldwide patent rights on the Lempel Zev
- * Welch (LZW) compression technique employed in the CompuServe GIF
- * image file format as well as in other formats. Unisys has made it
- * clear, however, that it does not require licensing or fees to be
- * paid for freely distributed, non-commercial applications (such as
- * xearth) that employ LZW/GIF technology. Those wishing further
- * information about licensing the LZW patent should contact Unisys
- * directly at (lzw_info@unisys.com) or by writing to
- *
- *   Unisys Corporation
- *   Welch Licensing Department
- *   M/S-C1SW19
- *   P.O. Box 500
- *   Blue Bell, PA 19424
  *
  * The author makes no representations about the suitability of this
  * software for any purpose. It is provided "as is" without express or
@@ -44,10 +30,15 @@
  */
 
 #include "xearth.h"
+#ifdef FRAMEBUFFER
+#include "framebuffer.h"
+#include <linux/fb.h>
+#else
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xatom.h>
 #include <X11/Xproto.h>
+#endif
 #include <signal.h>
 #include "kljcpyrt.h"
 
@@ -64,6 +55,30 @@
 #define LABEL_LEFT_FLUSH (1<<0)
 #define LABEL_TOP_FLUSH  (1<<1)
 
+#ifdef FRAMEBUFFER
+  #define BLACK     0x0000
+  #define WHITE     0xffff
+  #define RED       0xf800
+  #define GREEN     0x07e0
+  #define BLUE      0x001f
+  #define YELLOW    0xffe0
+  #define MAGENTA   0xf81f
+  #define LIGHTBLUE 0x07ff
+  #define GREY      0x7bef
+  #define LIGHTGREY 0xadf7
+
+
+  #define ScreenWidth  (vinfo.xres)
+  #define ScreenHeight (vinfo.yres)
+  #define Scanline (vinfo.xres*vinfo.bits_per_pixel/8)
+
+  #define Pixel int
+  #define Display void;
+  extern struct fb_var_screeninfo vinfo;
+  extern struct fb_fix_screeninfo finfo;
+#endif
+
+
 static void         init_x_general _P((int, char *[]));
 static void         process_opts _P((void));
 static void         init_x_colors _P((void));
@@ -72,7 +87,9 @@ static void         init_x_root_window _P((void));
 static void         init_x_separate_window _P((void));
 static void         wakeup _P((int));
 static int          get_bits_per_pixel _P((int));
+#ifndef FRAMEBUFFER
 static XFontStruct *load_x_font _P((Display *, char *));
+#endif
 static void         get_proj_type _P((void));
 static void         get_viewing_position _P((void));
 static void         get_sun_position _P((void));
@@ -82,13 +99,20 @@ static void         get_shift _P((void));
 static void         get_labelpos _P((void));
 static void         get_geometry _P((void));
 static void         x11_setup _P((void));
+#ifndef FRAMEBUFFER
 static void         pack_mono_1 _P((u16or32 *, u_char *));
 static void         pack_8 _P((u16or32 *, Pixel *, u_char *));
 static void         pack_16 _P((u16or32 *, Pixel *, u_char *));
 static void         pack_24 _P((u16or32 *, Pixel *, u_char *));
 static void         pack_32 _P((u16or32 *, Pixel *, u_char *));
+#endif
 static int          x11_row _P((u_char *));
 static void         x11_cleanup _P((void));
+#ifdef FRAMEBUFFER
+void         draw_label();
+static void         mark_location( MarkerInfo *);
+static void         draw_outlined_string(Pixel, Pixel,int, int, char *, int);
+#else
 static void         draw_label _P((Display *));
 static void         mark_location _P((Display *, MarkerInfo *));
 static void         draw_outlined_string _P((Display *, Pixmap, Pixel, Pixel,
@@ -99,21 +123,25 @@ static void         updateProperty _P((Display *, Window, const char *, Atom,
 static void         preserveResource _P((Display *, Window));
 static void         freePrevious _P((Display *, Window));
 static int          xkill_handler _P((Display *, XErrorEvent *));
+#endif
 
 static int      bpp;
 static u16or32 *dith;
 static u_char  *xbuf;
 static int      idx;
+#ifndef FRAMEBUFFER
 static XImage  *xim;
 static Pixmap   work_pix;
 static Pixmap   disp_pix;
 static int    (*orig_error_handler) _P((Display *, XErrorEvent *));
+#endif
 
 #ifdef DEBUG
 static int frame = 0;
 #endif /* DEBUG */
 
 char        *progclass;
+#ifndef FRAMEBUFFER
 Widget       app_shell;
 XtAppContext app_context;
 XrmDatabase  db;
@@ -124,14 +152,19 @@ Window       root;              /* root window         */
 Window       xearth_window;     /* xearth window       */
 Colormap     cmap;              /* default colormap    */
 Visual      *visl;              /* default visual      */
+#endif
 int          dpth;              /* default depth       */
 Pixel        white;             /* white pixel         */
 Pixel        black;             /* black pixel         */
 Pixel        hlight;            /* highlight pixel     */
+#ifndef FRAMEBUFFER
 GC           gc;                /* graphics context    */
+#endif
 Pixel       *pels;              /* allocated colors    */
 char        *font_name;         /* text font name      */
+#ifndef FRAMEBUFFER
 XFontStruct *font;              /* basic text font     */
+#endif
 
 static int   do_once;           /* only render once?   */
 static int   mono;              /* render in mono?     */
@@ -180,7 +213,7 @@ static char *defaults[] =
   "*iconname:   xearth",
   NULL
 };
-
+#ifndef FRAMEBUFFER
 static XrmOptionDescRec options[] =
 {
 { "-proj",        ".proj",        XrmoptionSepArg, 0     },
@@ -233,7 +266,7 @@ static XrmOptionDescRec options[] =
 { "-iconname",    ".iconname",    XrmoptionSepArg, 0     },
 };
 
-
+#endif
 void command_line_x(argc, argv)
      int   argc;
      char *argv[];
@@ -243,12 +276,14 @@ void command_line_x(argc, argv)
 
   init_x_colors();
   init_x_pixmaps();
+#ifndef FRAMEBUFFER
   font = load_x_font(dsply, font_name);
 
   if (use_root)
     init_x_root_window();
   else
     init_x_separate_window();
+#endif
 }
 
 
@@ -256,17 +291,22 @@ static void init_x_general(argc, argv)
      int   argc;
      char *argv[];
 {
+#ifdef FRAMEBUFFER
+  progname  = "TTXEARTH";
+#else
   progname  = argv[0];
+#endif
   progclass = "XEarth";
+#ifndef FRAMEBUFFER
   app_shell = XtAppInitialize(&app_context, progclass,
                               options, XtNumber(options),
                               &argc, argv, defaults, 0, 0);
+#endif
   if (argc > 1) usage(NULL);
-
+#ifndef FRAMEBUFFER
   dsply = XtDisplay(app_shell);
   scrn  = DefaultScreen(dsply);
   db    = XtDatabase(dsply);
-
   XtGetApplicationNameAndClass(dsply, &progname, &progclass);
 
   root   = RootWindow(dsply, scrn);
@@ -282,6 +322,14 @@ static void init_x_general(argc, argv)
   XSetState(dsply, gc, white, black, GXcopy, AllPlanes);
 
   bpp = get_bits_per_pixel(dpth);
+#else
+  dpth=vinfo.bits_per_pixel;
+  wdth=(vinfo.xres);
+  white=0xffff;
+  black=0;
+  hlight=white;
+  bpp= vinfo.bits_per_pixel;
+#endif
 }
 
 
@@ -320,7 +368,11 @@ static void process_opts()
   night           = get_integer_resource("night", "Night");
   terminator      = get_integer_resource("term", "Term");
   use_two_pixmaps = get_boolean_resource("twopix", "Twopix");
+#ifndef FRAMEBUFFER
   num_colors      = get_integer_resource("ncolors", "Ncolors");
+#else
+  num_colors      = 64;
+#endif
   do_fork         = get_boolean_resource("fork", "Fork");
   do_once         = get_boolean_resource("once", "Once");
   priority        = get_integer_resource("nice", "Nice");
@@ -328,11 +380,18 @@ static void process_opts()
   star_freq       = get_float_resource("starfreq", "Starfreq");
   big_stars       = get_integer_resource("bigstars", "Bigstars");
   do_grid         = get_boolean_resource("grid", "Grid");
+#ifndef FRAMEBUFFER
   grid_big        = get_integer_resource("grid1", "Grid1");
   grid_small      = get_integer_resource("grid2", "Grid2");
+#else
+  grid_big        = 15;
+  grid_small      = 6;
+#endif
   fixed_time      = get_integer_resource("time", "Time");
   xgamma          = get_float_resource("gamma", "Gamma");
+#ifndef FRAMEBUFFER
   font_name       = get_string_resource("font", "Font");
+#endif
   mono            = get_boolean_resource("mono", "Mono");
 
   /* various sanity checks on simple resources
@@ -380,7 +439,11 @@ static void process_opts()
 static void init_x_colors()
 {
   int     i;
+#ifndef FRAMEBUFFER
   XColor  xc, junk;
+#else
+  int r,g,b;
+#endif
   u_char *tmp;
   double  inv_xgamma;
 
@@ -394,9 +457,13 @@ static void init_x_colors()
   }
   else
   {
+#ifndef FRAMEBUFFER
+  
     if (XAllocNamedColor(dsply, cmap, "red", &xc, &junk) != 0)
       hlight = xc.pixel;
-
+#else
+      hlight = RED;
+#endif
     dither_setup(num_colors);
     pels = (Pixel *) malloc((unsigned) sizeof(Pixel) * dither_ncolors);
     assert(pels != NULL);
@@ -405,6 +472,7 @@ static void init_x_colors()
     inv_xgamma = 1.0 / xgamma;
     for (i=0; i<dither_ncolors; i++)
     {
+#ifndef FRAMEBUFFER
       xc.red   = ((1<<16)-1) * pow(((double) tmp[0] / 255), inv_xgamma);
       xc.green = ((1<<16)-1) * pow(((double) tmp[1] / 255), inv_xgamma);
       xc.blue  = ((1<<16)-1) * pow(((double) tmp[2] / 255), inv_xgamma);
@@ -412,6 +480,12 @@ static void init_x_colors()
       if (XAllocColor(dsply, cmap, &xc) == 0)
         fatal("unable to allocate enough colors");
       pels[i] = xc.pixel;
+#else
+      r=((1<<16)-1) * pow(((double) tmp[0] / 255), inv_xgamma);
+      g=((1<<16)-1) * pow(((double) tmp[1] / 255), inv_xgamma);
+      b=((1<<16)-1) * pow(((double) tmp[2] / 255), inv_xgamma);
+      pels[i] =((((r>>3)&0x1f)<<11)|(((g>>2)&0x3f)<<5)|((b>>3)&0x1f));
+#endif
 
       tmp += 3;
     }
@@ -421,24 +495,26 @@ static void init_x_colors()
 
 static void init_x_pixmaps()
 {
+#ifndef FRAMEBUFFER
   work_pix = XCreatePixmap(dsply, root, (unsigned) wdth,
                            (unsigned) hght, (unsigned) dpth);
   if (use_two_pixmaps)
     disp_pix = XCreatePixmap(dsply, root, (unsigned) wdth,
                              (unsigned) hght, (unsigned) dpth);
+#endif
 }
 
 
 static void init_x_root_window()
 {
+#ifndef FRAMEBUFFER
   xearth_window = GetVRoot(dsply);
-
   /* try to free any resources retained by any previous clients that
    * scribbled in the root window (also deletes the _XSETROOT_ID
    * property from the root window, if it was there)
    */
   freePrevious(dsply, xearth_window);
-
+#endif
   /* 18 may 1994
    *
    * setting the _XSETROOT_ID property is dangerous if xearth might be
@@ -484,6 +560,7 @@ static void init_x_root_window()
 
 static void init_x_separate_window()
 {
+#ifndef FRAMEBUFFER
   XSizeHints *xsh;
   char       *title;
   char       *iname;
@@ -531,8 +608,11 @@ static void init_x_separate_window()
 
   XFree((char *) xsh);
   free(title);
+
   free(iname);
+#endif
 }
+
 
 
 void x11_output()
@@ -550,6 +630,7 @@ void x11_output()
     /* for now, go ahead and reload the marker info every time
      * we redraw, but maybe change this in the future?
      */
+
     load_marker_info(markerfile);
 
     x11_setup();
@@ -558,9 +639,11 @@ void x11_output()
 
     if (do_once)
     {
+#ifndef FRAMEBUFFER
       if (use_root)
         preserveResource(dsply, xearth_window);
       XSync(dsply, True);
+#endif
       return;
     }
 
@@ -578,6 +661,7 @@ void x11_output()
       /* only do the alarm()/pause() stuff if wait_time is non-zero,
        * else alarm() will not behave as desired.
        */
+       
       alarm(wait_time);
       pause();
     }
@@ -593,7 +677,7 @@ static void wakeup(int junk)
   /* nothing */
 }
 
-
+#ifndef FRAMEBUFFER
 /* determine bits_per_pixel value for pixmaps of specified depth
  */
 static int get_bits_per_pixel(depth)
@@ -624,11 +708,11 @@ static int get_bits_per_pixel(depth)
   return rslt;
 }
 
-
 static XFontStruct *load_x_font(dpy, fontname)
      Display *dpy;
      char    *fontname;
 {
+
   XFontStruct *rslt;
 
   rslt = XLoadQueryFont(dpy, fontname);
@@ -647,7 +731,7 @@ static XFontStruct *load_x_font(dpy, fontname)
 
   return rslt;
 }
-
+#endif
 
 /* fetch and decode 'proj' resource (projection type)
  */
@@ -754,7 +838,7 @@ static void get_labelpos()
   label_orient = 0;
   label_xvalue = wdth - 5;
   label_yvalue = hght - 5;
-
+#ifndef FRAMEBUFFER
   res = get_string_resource("labelpos", "Labelpos");
   if (res != NULL)
   {
@@ -781,6 +865,7 @@ static void get_labelpos()
 
     free(res);
   }
+  #endif
 }
 
 
@@ -796,6 +881,7 @@ static void get_geometry()
   int   x, y;
   int   w, h;
 
+#ifndef FRAMEBUFFER
   res = get_string_resource("root", "Root");
   if (res != NULL)
   {
@@ -824,13 +910,13 @@ static void get_geometry()
     use_root   = 1;
     check_geom = 1;
   }
-
   /* if check_geom isn't set, nothing more to do
    */
   if (check_geom == 0) return;
-
+#endif
   /* look for -geometry and try to make sense of it
    */
+#ifndef FRAMEBUFFER
   res = get_string_resource("geometry", "Geometry");
   if (res != NULL)
   {
@@ -912,6 +998,10 @@ static void get_geometry()
     window_xvalue   = 0;
     window_yvalue   = 0;
   }
+#else
+  wdth            = 100;
+  hght            = 100;
+#endif 
 }
 
 
@@ -919,7 +1009,10 @@ static void x11_setup()
 {
   unsigned dith_size;
   unsigned xbuf_size;
-
+#ifdef FRAMEBUFFER
+  bpp=16;
+  wdth=ScreenWidth;
+#endif
   switch (bpp)
   {
   case 1:
@@ -930,7 +1023,11 @@ static void x11_setup()
   case 16:
   case 24:
   case 32:
+#ifdef FRAMEBUFFER  
+    dith_size = wdth+4;
+#else
     dith_size = wdth;
+#endif
     break;
 
   default:
@@ -948,7 +1045,7 @@ static void x11_setup()
 
   xbuf = (u_char *) malloc((unsigned) xbuf_size);
   assert(xbuf != NULL);
-
+#ifndef FRAMEBUFFER
   xim = XCreateImage(dsply, visl, (unsigned) dpth, ZPixmap, 0,
                      (char *) xbuf, (unsigned) wdth, 1, 8,
                      xbuf_size);
@@ -963,7 +1060,6 @@ static void x11_setup()
             bpp, xim->bits_per_pixel);
     exit(1);
   }
-
   if (bpp == 1)
   {
     /* force MSBFirst bitmap_bit_order and byte_order
@@ -971,10 +1067,15 @@ static void x11_setup()
     xim->bitmap_bit_order = MSBFirst;
     xim->byte_order       = MSBFirst;
   }
+#else
+  init_x_general(0,NULL);
+  init_x_colors();
+#endif
 
   idx = 0;
 }
 
+#ifndef FRAMEBUFFER
 
 /* pack pixels into ximage format (assuming bits_per_pixel == 1,
  * bitmap_bit_order == MSBFirst, and byte_order == MSBFirst)
@@ -999,8 +1100,6 @@ static void pack_mono_1(src, dst)
     src += 8;
   }
 }
-
-
 /* pack pixels into ximage format (assuming bits_per_pixel == 8)
  */
 static void pack_8(src, map, dst)
@@ -1018,7 +1117,7 @@ static void pack_8(src, map, dst)
     dst[i] = val;
   }
 }
-
+#endif
 
 /* pack pixels into ximage format (assuming bits_per_pixel == 16)
  */
@@ -1028,15 +1127,19 @@ static void pack_16(src, map, dst)
      u_char  *dst;
 {
   int      i, i_lim;
-  unsigned val;
+  unsigned int val;
 
   i_lim = wdth;
-
+#ifdef FRAMEBUFFER
+  if (0)
+#else
   if (xim->byte_order == MSBFirst)
+#endif
   {
     for (i=0; i<i_lim; i++)
     {
       val    = map[src[i]];
+      
       dst[0] = (val >> 8) & 0xff;
       dst[1] = val & 0xff;
       dst   += 2;
@@ -1053,7 +1156,7 @@ static void pack_16(src, map, dst)
     }
   }
 }
-
+#ifndef FRAMEBUFFER
 
 /* pack pixels into ximage format (assuming bits_per_pixel == 24)
  */
@@ -1090,7 +1193,6 @@ static void pack_24(src, map, dst)
     }
   }
 }
-
 
 /* pack pixels into ximage format (assuming bits_per_pixel == 32)
  */
@@ -1130,10 +1232,20 @@ static void pack_32(src, map, dst)
   }
 }
 
-
+#endif
+#ifdef FRAMEBUFFER
+extern char *fbp;
+#endif
 static int x11_row(row)
      u_char *row;
 {
+#ifndef FRAMEBUFFER
+//int i;
+//printf("now in row %d  idx=%d\n",*row,idx);
+//for(i=0;i<wdth;i++) {
+//  printf("%d: %d %d %d\n",i,row[3*i],row[3*i+1],row[3*i+2]);
+//}
+#endif
   if (mono)
     mono_dither_row(row, dith);
   else
@@ -1141,6 +1253,7 @@ static int x11_row(row)
 
   switch (bpp)
   {
+#ifndef FRAMEBUFFER
   case 1:
     pack_mono_1(dith, xbuf);
     break;
@@ -1148,11 +1261,11 @@ static int x11_row(row)
   case 8:
     pack_8(dith, pels, xbuf);
     break;
-
+#endif
   case 16:
     pack_16(dith, pels, xbuf);
     break;
-
+#ifndef FRAMEBUFFER
   case 24:
     pack_24(dith, pels, xbuf);
     break;
@@ -1160,7 +1273,7 @@ static int x11_row(row)
   case 32:
     pack_32(dith, pels, xbuf);
     break;
-
+#endif
   default:
     fprintf(stderr,
             "xearth %s: fatal - unsupported pixmap format (%d bits/pixel)\n",
@@ -1168,9 +1281,12 @@ static int x11_row(row)
     exit(1);
   }
 
+#ifndef FRAMEBUFFER
   XPutImage(dsply, work_pix, gc, xim, 0, 0, 0, idx, (unsigned) wdth, 1);
+#else
+  memmove(fbp+idx*Scanline,xbuf,Scanline);
+#endif
   idx += 1;
-
   return 0;
 }
 
@@ -1178,42 +1294,58 @@ static int x11_row(row)
 static void x11_cleanup()
 {
   MarkerInfo *minfo;
+#ifndef FRAMEBUFFER
   Display    *dpy;
   Pixmap      tmp;
 
   XDestroyImage(xim);
+#endif
   free(dith);
 
+#ifndef FRAMEBUFFER
   dpy = dsply;
+#endif
 
   if (do_markers)
   {
     minfo = marker_info;
     while (minfo->label != NULL)
     {
+    #ifdef FRAMEBUFFER
+      mark_location( minfo);
+    #else
       mark_location(dpy, minfo);
+    #endif
       minfo += 1;
     }
   }
 
+#ifdef FRAMEBUFFER
+  if (do_label) draw_label();
+#else
   if (do_label) draw_label(dpy);
+#endif
 
+#ifndef FRAMEBUFFER
   XSetWindowBackgroundPixmap(dpy, xearth_window, work_pix);
   XClearWindow(dpy, xearth_window);
   XSync(dpy, True);
-
   if (use_two_pixmaps)
   {
     tmp      = work_pix;
     work_pix = disp_pix;
     disp_pix = tmp;
   }
+#endif
 }
 
-
+#ifdef FRAMEBUFFER
+void draw_label() {
+#else
 static void draw_label(dpy)
      Display *dpy;
 {
+#endif
   int         dy;
   int         x, y;
   int         len;
@@ -1221,10 +1353,15 @@ static void draw_label(dpy)
   int         ascent;
   int         descent;
   char        buf[128];
+#ifndef FRAMEBUFFER
   XCharStruct extents;
 
   dy = font->ascent + font->descent + 1;
+#else 
+  dy=8;
+#endif
 
+#ifndef FRAMEBUFFER
   if (label_orient & LABEL_TOP_FLUSH)
   {
     y = label_yvalue + font->ascent;
@@ -1238,7 +1375,9 @@ static void draw_label(dpy)
     y -= 2 * dy;                /* 3 lines of text */
 #endif
   }
-
+#else
+  y = label_yvalue;
+#endif
 #ifdef DEBUG
   frame += 1;
   sprintf(buf, "frame %d", frame);
@@ -1248,50 +1387,70 @@ static void draw_label(dpy)
     x = label_xvalue - extents.lbearing;
   else
     x = (wdth + label_xvalue) - extents.rbearing;
+#ifdef FRAMEBUFFER
+  draw_outlined_string( white, black, x, y, buf, len);
+#else
   draw_outlined_string(dpy, work_pix, white, black, x, y, buf, len);
+#endif
   y += dy;
 #endif /* DEBUG */
 
   strftime(buf, sizeof(buf), "%d %b %y %H:%M %Z", localtime(&current_time));
   len = strlen(buf);
+#ifndef FRAMEBUFFER
   XTextExtents(font, buf, len, &direction, &ascent, &descent, &extents);
   if (label_orient & LABEL_LEFT_FLUSH)
     x = label_xvalue - extents.lbearing;
   else
     x = (wdth + label_xvalue) - extents.rbearing;
   draw_outlined_string(dpy, work_pix, white, black, x, y, buf, len);
+#else
+  draw_outlined_string( white, black, x, y, buf, len);
+#endif
   y += dy;
 
   sprintf(buf, "view %.1f %c %.1f %c",
           fabs(view_lat), ((view_lat < 0) ? 'S' : 'N'),
           fabs(view_lon), ((view_lon < 0) ? 'W' : 'E'));
   len = strlen(buf);
+#ifndef FRAMEBUFFER
   XTextExtents(font, buf, len, &direction, &ascent, &descent, &extents);
   if (label_orient & LABEL_LEFT_FLUSH)
     x = label_xvalue - extents.lbearing;
   else
     x = (wdth + label_xvalue) - extents.rbearing;
   draw_outlined_string(dpy, work_pix, white, black, x, y, buf, len);
+#else
+  draw_outlined_string( white, black, x, y, buf, len);
+#endif
   y += dy;
 
   sprintf(buf, "sun %.1f %c %.1f %c",
           fabs(sun_lat), ((sun_lat < 0) ? 'S' : 'N'),
           fabs(sun_lon), ((sun_lon < 0) ? 'W' : 'E'));
   len = strlen(buf);
+#ifndef FRAMEBUFFER
   XTextExtents(font, buf, len, &direction, &ascent, &descent, &extents);
   if (label_orient & LABEL_LEFT_FLUSH)
     x = label_xvalue - extents.lbearing;
   else
     x = (wdth + label_xvalue) - extents.rbearing;
   draw_outlined_string(dpy, work_pix, white, black, x, y, buf, len);
+#else 
+    x = (wdth + label_xvalue);
+  draw_outlined_string( white, black, x, y, buf, len);
+#endif
   y += dy;
 }
 
-
+#ifdef FRAMEBUFFER
+static void mark_location(MarkerInfo *info) {
+#else
 static void mark_location(dpy, info)
      Display    *dpy;
      MarkerInfo *info;
 {
+#endif
   int         x, y;
   int         len;
   double      lat, lon;
@@ -1300,7 +1459,9 @@ static void mark_location(dpy, info)
   int         direction;
   int         ascent;
   int         descent;
+#ifndef FRAMEBUFFER
   XCharStruct extents;
+#endif
 
   lat = info->lat * (M_PI/180);
   lon = info->lon * (M_PI/180);
@@ -1345,8 +1506,8 @@ static void mark_location(dpy, info)
   if (text != NULL)
   {
     len = strlen(text);
+#ifndef FRAMEBUFFER
     XTextExtents(font, text, len, &direction, &ascent, &descent, &extents);
-
     switch (info->align)
     {
     case MarkerAlignLeft:
@@ -1373,14 +1534,18 @@ static void mark_location(dpy, info)
     default:
       assert(0);
     }
-
     draw_outlined_string(dpy, work_pix, hlight, black, x, y, text, len);
+#else
+    draw_outlined_string(hlight, black, x, y, text, len);
+#endif
   }
 
   XSetForeground(dpy, gc, white);
 }
 
-
+#ifdef FRAMEBUFFER
+void draw_outlined_string(Pixel fg, Pixel bg, int x, int y, char *text, int len) {
+#else
 static void draw_outlined_string(dpy, pix, fg, bg, x, y, text, len)
      Display *dpy;
      Pixmap   pix;
@@ -1391,6 +1556,7 @@ static void draw_outlined_string(dpy, pix, fg, bg, x, y, text, len)
      char    *text;
      int      len;
 {
+#endif
   XSetForeground(dpy, gc, bg);
   XDrawString(dpy, pix, gc, x+1, y, text, len);
   XDrawString(dpy, pix, gc, x-1, y, text, len);
@@ -1400,7 +1566,7 @@ static void draw_outlined_string(dpy, pix, fg, bg, x, y, text, len)
   XDrawString(dpy, pix, gc, x, y, text, len);
 }
 
-
+#ifndef FRAMEBUFFER
 /* Function Name: GetVRoot
  * Description: Gets the root window, even if it's a virtual root
  * Arguments: the display and the screen
@@ -1450,7 +1616,7 @@ static Window GetVRoot(dpy)
   return rslt;
 }
 
-
+#endif
 /*
  * the following code is lifted nearly verbatim from jim frost's
  * xloadimage code (version 3.00). that code includes a note
@@ -1464,7 +1630,7 @@ static Window GetVRoot(dpy)
  * were not in the original xloadimage code; this is new as of xearth
  * version 0.91.
  */
-
+#ifndef FRAMEBUFFER
 static void updateProperty(dpy, w, name, type, format, data, nelem)
      Display    *dpy;
      Window      w;
@@ -1481,13 +1647,14 @@ static void updateProperty(dpy, w, name, type, format, data, nelem)
   XChangeProperty(dpy, w, atom, type, format, PropModeReplace,
                   (unsigned char *)&data, nelem);
 }
-
+#endif
 
 /* Sets the close-down mode of the client to 'RetainPermanent'
  * so all client resources will be preserved after the client
  * exits.  Puts a property on the default root window containing
  * an XID of the client so that the resources can later be killed.
  */
+#ifndef FRAMEBUFFER
 static void preserveResource(dpy, w)
      Display *dpy;
      Window   w;
@@ -1501,8 +1668,6 @@ static void preserveResource(dpy, w)
   /* retain all client resources until explicitly killed */
   XSetCloseDownMode(dpy, RetainPermanent);
 }
-
-
 /* Flushes any resources previously retained by the client,
  * if any exist.
  */
@@ -1545,8 +1710,6 @@ static void freePrevious(dpy, w)
               RETAIN_PROP_NAME, progname);
     }
 }
-
-
 static int xkill_handler(dpy, xev)
      Display     *dpy;
      XErrorEvent *xev;
@@ -1568,3 +1731,4 @@ static int xkill_handler(dpy, xev)
    */
   return orig_error_handler(dpy, xev);
 }
+#endif
