@@ -1,21 +1,21 @@
 # simple Makefile for TTxearth (c) Markus Hoffmann 2009-02-21
 #
 
-DEFINES = 
-CC	= arm-linux-gcc
+ARMCC	= arm-linux-gcc
+CC      = gcc
 CFLAGS	= -O2 $(DEFINES)
 LDFLAGS = 
 
 PROG	= xearth
 SRCS	= ../xearth.c ../dither.c ../extarr.c ../gif.c ../gifout.c ../mapdata.c \
 	  ../markers.c ../ppm.c ../render.c ../resources.c ../scan.c ../sunpos.c ../x11.c \
-	  framebuffer.c
+	  ../framebuffer.c
 OBJS	= xearth.o dither.o extarr.o gif.o gifout.o mapdata.o \
 	  markers.o ppm.o render.o resources.o scan.o sunpos.o x11.o \
 	  framebuffer.o
 LIBS	= -lm
 
-HSRC    = framebuffer.h ../xearth.h port.h ../kljcpyrt.h ../gifint.h ../giflib.h ../extarr.h
+HSRC    = ../framebuffer.h ../xearth.h ../port.h  ../gifint.h ../giflib.h ../extarr.h
 
 DIST	= README.TomTom RELEASE_NOTES INSTALL HISTORY ../BUILT-IN Makefile \
 	  ../xearth.man xearth.bmp xearth.cap xearth-wrapper $(SRCS) $(HSRC)
@@ -23,13 +23,16 @@ DIR=TTxearth-1.01
 DIR2=$(DIR)-bin
 BINDIST= README.TomTom RELEASE_NOTES xearth xearth.bmp xearth.cap xearth-wrapper
 
-all:	$(PROG)
 
-$(PROG):	$(SRCS)
-	$(CC) -DFRAMEBUFFER -o $(PROG) $(LDFLAGS) $(SRCS) $(LIBS)
+all:	$(PROG) $(PROG)-l
+
+xearth:	$(SRCS)
+	$(ARMCC) -DFRAMEBUFFER -I.. -o $@ $(LDFLAGS) $(SRCS) $(LIBS)
+xearth-l: $(SRCS)
+	$(CC) -DFRAMEBUFFER -I.. -o $@ $(LDFLAGS) $(SRCS) $(LIBS)
 
 clean:
-	/bin/rm -f $(PROG) $(OBJS)
+	/bin/rm -f $(PROG) xearth-l $(OBJS)
 
 bindist : $(DIR2).zip
 

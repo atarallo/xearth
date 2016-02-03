@@ -44,6 +44,7 @@ typedef unsigned short u_short;
 #include <assert.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 #include "port.h"
 #include "extarr.h"
 

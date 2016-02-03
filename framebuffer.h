@@ -12,7 +12,6 @@
   #define FALSE    0
   #define TRUE     (!FALSE)
 #endif
-#define FRAMEBUFFER
 #define PI       3.141592653589793
 #define E        2.718281828459
 #define round(a) ((int)(a+0.5))

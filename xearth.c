@@ -30,6 +30,11 @@
 
 #include "xearth.h"
 #include "output_mode.h"
+#ifdef FRAMEBUFFER
+#include <linux/fb.h>
+#include "framebuffer.h"
+extern struct fb_var_screeninfo vinfo;
+#endif
 extern int errno;
 
 #ifndef NO_SETPRIORITY
@@ -110,10 +115,14 @@ main (argc, argv)
     int argc;
     char *argv[];
 {
+#ifdef FRAMEBUFFER
+     FbRender_Open();
+#endif
     set_defaults ();
-
     progname = argv[0];
-
+#ifdef FRAMEBUFFER
+  command_line(argc, argv);
+#else
     if (using_x (argc, argv))
 #ifdef HAVE_X11
         command_line_x (argc, argv);
@@ -127,6 +136,7 @@ main (argc, argv)
             usage ("xearth refuses to write image data to a tty");
         }
     }
+#endif
 
     if (fixed_time && earthquake_info) {
         usage ("fixed time and earthquake information could not be "
@@ -139,10 +149,11 @@ main (argc, argv)
         set_priority (priority);
 
     srandom (((int) time (NULL)) + ((int) getpid ()));
-
     output ();
-
-    return 0;
+#ifdef FRAMEBUFFER
+  FbRender_Close();
+#endif
+  return 0;
 }
 
 #ifdef NO_SETPRIORITY
@@ -446,8 +457,13 @@ set_defaults ()
     compute_sun_pos = 1;
     view_rot = 0;
     rotate_type = ViewRotNorth;
-    wdth = DefaultWdthHght;
-    hght = DefaultWdthHght;
+#ifdef FRAMEBUFFER
+    wdth             = ScreenWidth;
+    hght             = ScreenHeight;
+#else
+    wdth             = DefaultWdthHght;
+    hght             = DefaultWdthHght;
+#endif
     shift_x = 0;
     shift_y = 0;
     view_mag = 1.0;

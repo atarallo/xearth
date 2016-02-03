@@ -138,29 +138,36 @@ load_marker_info (fname)
     int i;
     MarkerInfo *new;
 
-    if (info == NULL) {
-        /* first time through, allocate a new extarr
-         */
-        info = extarr_alloc (sizeof (MarkerInfo));
-    } else {
-        /* on subsequent passes, just clean it up for reuse
-         */
-        for (i = 0; i < (info->count - 1); i++)
-            free (((MarkerInfo *) info->body)[i].label);
-        info->count = 0;
-    }
+  if (info == NULL)
+  {
+    /* first time through, allocate a new extarr
+     */
+    info = extarr_alloc(sizeof(MarkerInfo));
+  }
+  else
+  {
+    /* on subsequent passes, just clean it up for reuse
+     */
+    for (i=0; i<(info->count-1); i++)
+      free(((MarkerInfo *) info->body)[i].label);
+    info->count = 0;
+  }
 
-    if (strcmp (fname, BuiltInName) == 0)
-        builtin_marker_info ();
-    else
-        user_marker_info (fname);
+#ifndef FRAMEBUFFER
+  if (strcmp(fname, BuiltInName) == 0)
+#endif
+    builtin_marker_info();
+#ifndef FRAMEBUFFER
+  else
+    user_marker_info(fname);
+#endif
 
-    new = (MarkerInfo *) extarr_next (info);
-    new->lat = 0;
-    new->lon = 0;
-    new->label = NULL;
+  new = (MarkerInfo *) extarr_next(info);
+  new->lat   = 0;
+  new->lon   = 0;
+  new->label = NULL;
 
-    marker_info = (MarkerInfo *) info->body;
+  marker_info = (MarkerInfo *) info->body;
 }
 
 static void
