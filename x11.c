@@ -109,7 +109,12 @@ static void         pack_16 _P((u16or32 *, Pixel *, u_char *));
 /* WORK IN PROGRESS                                                */
 /*******************************************************************/
 static void         pack_24 _P((u16or32 *, Pixel *));
-static void         pack_32 _P((u16or32 *, Pixel *, u_char *));
+/*******************************************************************/
+/* static void         pack_32 _P((u16or32 *, Pixel *, u_char *)); */
+/*                                                                 */
+/* WORK IN PROGRESS                                                */
+/*******************************************************************/
+static void         pack_32 _P((u16or32 *, Pixel *));
 #endif
 static int          x11_row _P((u_char *));
 static void         x11_cleanup _P((void));
@@ -725,11 +730,8 @@ static void wakeup(int junk)
 }
 
 #ifndef FRAMEBUFFER
-/* determine bits_per_pixel value for pixmaps of specified depth
- */
-static int get_bits_per_pixel(depth)
-     int depth;
-{
+/* determine bits_per_pixel value for pixmaps of specified depth */
+static int get_bits_per_pixel(int depth) {
   int                  i;
   int                  cnt;
   XPixmapFormatValues *pmf;
@@ -740,7 +742,7 @@ static int get_bits_per_pixel(depth)
     fatal("unable to get pixmap format list");
 
   rslt = 0;
-  for (i=0; i<cnt; i++)
+  for (i=0; i < cnt; i++)
     if (pmf[i].depth == depth) {
       rslt = pmf[i].bits_per_pixel;
       break;
@@ -775,10 +777,8 @@ static XFontStruct *load_x_font(dpy, fontname)
 }
 #endif
 
-/* fetch and decode 'proj' resource (projection type)
- */
-static void get_proj_type()
-{
+/* fetch and decode 'proj' resource (projection type) */
+static void get_proj_type() {
   char *res;
 
   res = get_string_resource("proj", "Proj");
@@ -788,10 +788,8 @@ static void get_proj_type()
   }
 }
 
-/* fetch and decode 'pos' resource (viewing position specifier)
- */
-static void get_viewing_position()
-{
+/* fetch and decode 'pos' resource (viewing position specifier) */
+static void get_viewing_position() {
   char *res;
 
   res = get_string_resource("pos", "Pos");
@@ -801,10 +799,8 @@ static void get_viewing_position()
   }
 }
 
-/* fetch and decode 'sunpos' resource (sun position specifier)
- */
-static void get_sun_position()
-{
+/* fetch and decode 'sunpos' resource (sun position specifier) */
+static void get_sun_position() {
   char *res;
 
   res = get_string_resource("sunpos", "Sunpos");
@@ -814,10 +810,8 @@ static void get_sun_position()
   }
 }
 
-/* fetch and decode 'rot' resource (rotation specifier)
- */
-static void get_rotation()
-{
+/* fetch and decode 'rot' resource (rotation specifier) */
+static void get_rotation() {
   char *res;
 
   res = get_string_resource("rot", "Rotation");
@@ -827,10 +821,8 @@ static void get_rotation()
   }
 }
 
-/* fetch and decode 'size' resource (size specifier)
- */
-static void get_size()
-{
+/* fetch and decode 'size' resource (size specifier) */
+static void get_size() {
   char *res;
 
   res = get_string_resource("size", "Size");
@@ -840,10 +832,8 @@ static void get_size()
   }
 }
 
-/* fetch and decode 'shift' resource (shift specifier)
- */
-static void get_shift()
-{
+/* fetch and decode 'shift' resource (shift specifier) */
+static void get_shift() {
   char *res;
 
   res = get_string_resource("shift", "Shift");
@@ -854,11 +844,8 @@ static void get_shift()
   }
 }
 
-/* fetch and decode 'ncolors' resource (color depth)
- */
-static void
-get_ncolors ()
-{
+/* fetch and decode 'ncolors' resource (color depth) */
+static void get_ncolors () {
     char *res;
 
     res = get_string_resource ("ncolors", "Ncolors");
@@ -868,10 +855,8 @@ get_ncolors ()
     }
 }
 
-/* fetch and decode 'labelpos' resource (label position)
- */
-static void get_labelpos()
-{
+/* fetch and decode 'labelpos' resource (label position) */
+static void get_labelpos() {
   char    *res;
   int      mask;
   int      x, y;
@@ -885,8 +870,7 @@ static void get_labelpos()
   label_yvalue = hght - 5;
 #ifndef FRAMEBUFFER
   res = get_string_resource("labelpos", "Labelpos");
-  if (res != NULL)
-  {
+  if (res != NULL) {
     mask = XParseGeometry(res, &x, &y, &w, &h);
 
     if (mask & (WidthValue | HeightValue))
@@ -1027,8 +1011,7 @@ static void get_geometry() {
 }
 
 
-static void x11_setup()
-{
+static void x11_setup() {
   unsigned dith_size;
   unsigned xbuf_size;
 #ifdef FRAMEBUFFER
@@ -1193,10 +1176,7 @@ static void pack_24 (u16or32 *src, Pixel *dst) {
 }
 
 /* pack pixels into ximage format (assuming bits_per_pixel == 32) */
-static void pack_32 (src, dst)
-    u_char *src;
-    u_char *dst;
-{
+static void pack_32 (u16or32 * src,Pixel *dst) {
   int i, i_lim;
 
   i_lim = wdth;
