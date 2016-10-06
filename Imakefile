@@ -28,10 +28,10 @@ XCOMM THIS SOFTWARE.
         DEFINES = 
            SRCS = xearth.c dither.c extarr.c gif.c gifout.c mapdata.c \
                   markers.c ppm.c render.c resources.c scan.c sunpos.c \
-                  x11.c
+                  x11.c png.c jpeg.c bmp.c font.c overlay.c
            OBJS = xearth.o dither.o extarr.o gif.o gifout.o mapdata.o \
                   markers.o ppm.o render.o resources.o scan.o sunpos.o \
-                  x11.o
+                  x11.o png.o jpeg.o bmp.o font.o overlay.o
         DEPLIBS = $(DEPXTOOLLIB) $(DEPXLIB)
 LOCAL_LIBRARIES = $(XTOOLLIB) $(XLIB)
   SYS_LIBRARIES = -lm
