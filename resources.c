@@ -153,15 +153,10 @@ get_float_resource (res_name, res_class)
 }
 
 #ifdef FRAMEBUFFER
-unsigned int
-get_pixel_resource (const char *res_name, const char *res_class, void *dpy, int cmap) {
+unsigned int get_pixel_resource (const char *res_name, const char *res_class, void *dpy, int cmap) {
 return(4711);
 #else
-unsigned int get_pixel_resource (res_name, res_class, dpy, cmap)
-    const char *res_name, *res_class;
-    Display *dpy;
-    Colormap cmap;
-{
+unsigned int get_pixel_resource (const char *res_name, const char *res_class, Display *dpy, Colormap cmap) {
     XColor color;
     char *s = get_string_resource (res_name, res_class);
 
