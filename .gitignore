@@ -6,3 +6,4 @@ xearth
 *.swp
 cscope.*
 *~
+Makefile
