@@ -103,7 +103,12 @@ static void			x11_setup _P((void));
 static void         pack_mono_1 _P((u16or32 *, u_char *));
 static void         pack_8 _P((u16or32 *, Pixel *, u_char *));
 static void         pack_16 _P((u16or32 *, Pixel *, u_char *));
-static void         pack_24 _P((u16or32 *, Pixel *, u_char *));
+/*******************************************************************/
+/* static void         pack_24 _P((u16or32 *, Pixel *, u_char *)); */
+/*                                                                 */
+/* WORK IN PROGRESS                                                */
+/*******************************************************************/
+static void         pack_24 _P((u16or32 *, Pixel *));
 static void         pack_32 _P((u16or32 *, Pixel *, u_char *));
 #endif
 static int          x11_row _P((u_char *));
@@ -1114,8 +1119,7 @@ static void pack_mono_1(src, dst)
   }
 }
 
-/* pack pixels into ximage format (assuming bits_per_pixel == 8)
- */
+/* pack pixels into ximage format (assuming bits_per_pixel == 8) */
 static void pack_8(src, map, dst)
      u16or32 *src;
      Pixel   *map;
@@ -1132,8 +1136,7 @@ static void pack_8(src, map, dst)
 }
 #endif
 
-/* pack pixels into ximage format (assuming bits_per_pixel == 16)
- */
+/* pack pixels into ximage format (assuming bits_per_pixel == 16) */
 static void pack_16(src, map, dst)
      u16or32 *src;
      Pixel   *map;
@@ -1165,13 +1168,8 @@ static void pack_16(src, map, dst)
 }
 #ifndef FRAMEBUFFER
 
-/* pack pixels into ximage format (assuming bits_per_pixel == 24)
- */
-static void
-pack_24 (src, dst)
-    u_char *src;
-    u_char *dst;
-{
+/* pack pixels into ximage format (assuming bits_per_pixel == 24) */
+static void pack_24 (u16or32 *src, Pixel *dst) {
   int      i, i_lim;
  // unsigned val;
 
@@ -1194,8 +1192,7 @@ pack_24 (src, dst)
   }
 }
 
-/* pack pixels into ximage format (assuming bits_per_pixel == 32)
- */
+/* pack pixels into ximage format (assuming bits_per_pixel == 32) */
 static void pack_32 (src, dst)
     u_char *src;
     u_char *dst;
