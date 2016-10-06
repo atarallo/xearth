@@ -1205,16 +1205,8 @@ static void pack_32 (u16or32 * src,Pixel *dst) {
 #ifdef FRAMEBUFFER
 extern char *fbp;
 #endif
-static int x11_row(row)
-     u_char *row;
-{
-#ifndef FRAMEBUFFER
-//int i;
-//printf("now in row %d  idx=%d\n",*row,idx);
-//for(i=0;i<wdth;i++) {
-//  printf("%d: %d %d %d\n",i,row[3*i],row[3*i+1],row[3*i+2]);
-//}
-#endif
+static int x11_row(u_char *row) {
+
   if(bpp<24) {
     if(mono) mono_dither_row(row, dith);
     else dither_row(row, dith);
@@ -1234,18 +1226,17 @@ static int x11_row(row)
     break;
 #ifndef FRAMEBUFFER
   case 24:
-    pack_24 (row, xbuf);
+    pack_24 ((u16or32 *)row,(Pixel *)xbuf);
     break;
-
   case 32:
-        pack_32 (row, xbuf);
+        pack_32 ((u16or32 *)row,(Pixel *)xbuf);
     break;
 #endif
   default:
     fprintf(stderr,
             "xearth %s: fatal - unsupported pixmap format (%d bits/pixel)\n",
             VersionString, bpp);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
 #ifndef FRAMEBUFFER
