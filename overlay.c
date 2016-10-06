@@ -168,22 +168,19 @@ overlay_close ()
     clouds = NULL;
 }
 
-static int
-image_type (f)
-    FILE *f;
-{
+static int image_type ( FILE *f) {
     int r = ImageUnknown;
     u_char buf[8];
 
-    fread (buf, 1, sizeof (buf), f);
-    if (memcmp (buf, "GIF8", 4) == 0) {
-        r = ImageGif;
-    } else if (memcmp (buf, "\x89PNG", 4) == 0) {
-        r = ImagePng;
-    } else if (memcmp (buf, "\xff\xd8", 2) == 0) {
-        r = ImageJpeg;
+    if ( fread (buf, 1, sizeof (buf), f) != 0 ) { 
+        if (memcmp (buf, "GIF8", 4) == 0) {
+            r = ImageGif;
+        } else if (memcmp (buf, "\x89PNG", 4) == 0) {
+            r = ImagePng;
+        } else if (memcmp (buf, "\xff\xd8", 2) == 0) {
+            r = ImageJpeg;
+        }
+        fseek (f, 0, SEEK_SET);
     }
-    fseek (f, 0, SEEK_SET);
-
     return r;
 }
