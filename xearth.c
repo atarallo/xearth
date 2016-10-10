@@ -110,18 +110,15 @@ time_t start_time = 0;
 time_t current_time;
 char errmsgbuf[1024];   /* for formatting warning/error msgs */
 
-int
-main (argc, argv)
-    int argc;
-    char *argv[];
-{
+int main ( int argc, char *argv[]) {
+
 #ifdef FRAMEBUFFER
      FbRender_Open();
 #endif
     set_defaults ();
     progname = argv[0];
 #ifdef FRAMEBUFFER
-  command_line(argc, argv);
+    command_line(argc, argv);
 #else
     if (using_x (argc, argv))
 #ifdef HAVE_X11
@@ -151,9 +148,9 @@ main (argc, argv)
     srandom (((int) time (NULL)) + ((int) getpid ()));
     output ();
 #ifdef FRAMEBUFFER
-  FbRender_Close();
+    FbRender_Close();
 #endif
-  return 0;
+    return 0;
 }
 
 #ifdef NO_SETPRIORITY
@@ -1169,10 +1166,8 @@ version_info (flag)
         exit (0);
 }
 
-void
-usage (msg)
-    const char *msg;
-{
+void usage ( const char *msg) {
+
     version_info (0);
     if (msg != NULL)
         fprintf (stderr, "%s\n", msg);
@@ -1195,24 +1190,20 @@ usage (msg)
              " [-earthquake_info|-noearthquake_info] [-display dpyname]"
              " [-version]\n");
     fprintf (stderr, "\n");
-    exit (1);
+    exit (EXIT_FAILURE);
 }
 
-void
-warning (msg)
-    const char *msg;
-{
+void warning (const char *msg) {
+
     fflush (stdout);
     fprintf (stderr, "xearth %s: warning - %s\n", VersionString, msg);
     fflush (stderr);
 }
 
-void
-fatal (msg)
-    const char *msg;
-{
+void fatal (const char *msg) {
+
     fflush (stdout);
     fprintf (stderr, "xearth %s: fatal - %s\n", VersionString, msg);
     fprintf (stderr, "\n");
-    exit (1);
+    exit (EXIT_FAILURE);
 }
